@@ -9,7 +9,12 @@ load_dotenv()
 
 # Connect to MongoDB
 client = MongoClient(os.getenv("MONGO_URI"))
-db = client.get_database()  # Gets database from connection string
+db = client["CropDiseaseDB"]  # Explicitly specify database name
+
+def initialize_db():
+    """Create necessary indexes in the database"""
+    # Create unique index on username field to prevent duplicates
+    db.users.create_index([("username", pymongo.ASCENDING)], unique=True)
 
 def insert_user(user_data):
     try:
