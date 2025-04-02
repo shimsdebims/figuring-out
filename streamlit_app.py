@@ -1,135 +1,110 @@
 import streamlit as st
-import datetime
+import torch
+from torchvision import models, transforms
 from PIL import Image
-from auth import register_user, login_user
-from database import insert_upload, get_user_uploads, initialize_db
+import json
 import os
 
-# Initialize database - add this to ensure indexes are created
-initialize_db()
+# Set page config
+st.set_page_config(
+    page_title="Crop Disease Detection",
+    page_icon="🌱",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# Initialize session state
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-if 'username' not in st.session_state:
-    st.session_state.username = None
-if 'user_id' not in st.session_state:
-    st.session_state.user_id = None
+# Load the pre-trained model
+@st.cache_resource
+def load_model():
+    model = models.resnet50(pretrained=False)
+    num_classes = 15
+    model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
+    model.load_state_dict(torch.load('Model/crop_disease_model.pth', map_location=torch.device('cpu')))
+    model.eval()
+    return model
 
-# App title
-st.title("Crop Disease Detection")
+model = load_model()
 
-# Sidebar for authentication
-with st.sidebar:
-    st.title("User Account")
+# Class labels
+CLASS_LABELS = {
+    0: 'Tomato - Healthy',
+    1: 'Tomato - Leaf Mold',
+    2: 'Tomato - Yellow Leaf Curl Virus',
+    3: 'Tomato - Septoria Leaf Spot',
+    4: 'Potato - Healthy',
+    5: 'Potato - Late Blight',
+    6: 'Potato - Early Blight',
+    7: 'Corn - Healthy',
+    8: 'Corn - Northern Leaf Blight',
+    9: 'Corn - Common Rust',
+    10: 'Corn - Gray Leaf Spot',
+    11: 'Rice - Healthy',
+    12: 'Rice - Blast',
+    13: 'Rice - Bacterial Leaf Blight',
+    14: 'Rice - Brown Spot'
+}
+
+# Load disease info
+with open('disease_info.json', 'r') as f:
+    DISEASE_INFO = json.load(f)
+
+# Image preprocessing
+def preprocess_image(image):
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    img = image.convert('RGB')
+    img = transform(img).unsqueeze(0)
+    return img
+
+# Prediction function
+def predict_disease(image):
+    img = preprocess_image(image)
+    with torch.no_grad():
+        output = model(img)
+        _, predicted = torch.max(output, 1)
+        predicted_class = predicted.item()
+    return CLASS_LABELS[predicted_class], DISEASE_INFO.get(CLASS_LABELS[predicted_class], {})
+
+# Main app
+def main():
+    st.title("🌱 Crop Disease Detection")
+    st.markdown("Upload an image of a plant leaf to detect potential diseases and get treatment recommendations.")
+
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
     
-    if not st.session_state.logged_in:
-        # Login section
-        st.header("Login")
-        login_username = st.text_input("Username", key="login_username")
-        login_password = st.text_input("Password", type="password", key="login_password")
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file)
+        st.image(image, caption='Uploaded Image', use_column_width=True)
         
-        if st.button("Login"):
-            if login_username and login_password:
-                success, message = login_user(login_username, login_password)
-                if success:
-                    st.session_state.logged_in = True
-                    st.session_state.username = login_username
-                    st.session_state.user_id = message
-                    st.success("Logged in!")
-                    st.rerun()
-                else:
-                    st.error(message)
-            else:
-                st.warning("Need both fields")
-        
-        # Registration section - always visible
-        st.header("Register")
-        reg_username = st.text_input("New username", key="reg_username")
-        reg_password = st.text_input("New password", type="password", key="reg_password")
-        reg_email = st.text_input("Email", key="reg_email")
-        
-        if st.button("Register"):
-            if reg_username and reg_password and reg_email:
-                success, message = register_user(reg_username, reg_password, reg_email)
-                if success:
-                    st.success("Registered! Please login.")
-                else:
-                    st.error(message)
-            else:
-                st.warning("All fields required")
-    
-    else:
-        st.write(f"Welcome, {st.session_state.username}!")
-        if st.button("Logout"):
-            st.session_state.logged_in = False
-            st.session_state.username = None
-            st.session_state.user_id = None
-            st.success("Logged out!")
-            st.rerun()
-        
-        st.subheader("Your Uploads")
-        uploads = get_user_uploads(st.session_state.user_id)
-        if uploads:
-            for upload in uploads:
-                st.write(f"{upload['disease_prediction']} ({upload['upload_date'].strftime('%Y-%m-%d')})")
-        else:
-            st.info("No uploads yet")
-
-# Main app content
-if st.session_state.logged_in:
-    uploaded_file = st.file_uploader("Upload plant image", type=["jpg", "jpeg", "png"])
-    
-    if uploaded_file:
-        try:
-            image = Image.open(uploaded_file)
-            st.image(image, use_column_width=True)
-            
-            if st.button("Analyze"):
-                # Ensure upload directory exists
-                os.makedirs(f"uploads/{st.session_state.username}", exist_ok=True)
+        if st.button('Analyze'):
+            with st.spinner('Analyzing the image...'):
+                prediction, disease_info = predict_disease(image)
                 
-                # Save the image file
-                image_path = f"uploads/{st.session_state.username}/{uploaded_file.name}"
-                with open(image_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
+                st.success("Analysis Complete!")
                 
-                # Replace with your actual prediction code
-                disease = "Tomato - Healthy"  # Example
-                confidence = 0.95  # Example
+                # Display results in an appealing layout
+                col1, col2 = st.columns([1, 2])
                 
-                # Save to database
-                upload_data = {
-                    "user_id": st.session_state.user_id,
-                    "image_path": image_path,
-                    "disease_prediction": disease,
-                    "confidence": confidence,
-                    "upload_date": datetime.datetime.utcnow()
-                }
-                success, message = insert_upload(upload_data)
+                with col1:
+                    st.subheader("Prediction Result")
+                    st.markdown(f"**{prediction}**")
+                    st.image(image, use_column_width=True)
                 
-                if success:
-                    st.success(f"Detected: {disease}")
-                    st.write(f"Confidence: {confidence:.0%}")
+                with col2:
+                    st.subheader("Disease Information")
                     
-                    # Display disease information
-                    import json
-                    try:
-                        with open("disease_info.json", "r") as f:
-                            disease_info = json.load(f)
-                            
-                        if disease in disease_info:
-                            info = disease_info[disease]
-                            st.subheader("Disease Information")
-                            st.write(f"**Symptoms:** {info['symptoms']}")
-                            st.write(f"**Treatment:** {info['treatment']}")
-                            st.write(f"**Fun Fact:** {info['fun_fact']}")
-                    except Exception as e:
-                        st.warning(f"Could not load disease information: {str(e)}")
-                else:
-                    st.error(f"Failed to save upload: {message}")
-        
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-else:
-    st.info("Please login or register to detect crop diseases")
+                    # Use expanders for each section
+                    with st.expander("Symptoms", expanded=True):
+                        st.info(disease_info['symptoms'])
+                    
+                    with st.expander("Treatment Recommendations"):
+                        st.warning(disease_info['treatment'])
+                    
+                    with st.expander("Did You Know?"):
+                        st.success(disease_info['fun_fact'])
+
+if __name__ == '__main__':
+    main()
