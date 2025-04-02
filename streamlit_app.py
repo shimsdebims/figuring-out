@@ -1,18 +1,12 @@
 import streamlit as st
-import pickle
+import torch
+from torchvision import models, transforms
+from PIL import Image
 import json
 import os
-import pandas as pd
-import numpy as np
-from PIL import Image
 import datetime
 from pathlib import Path
 import hashlib
-import torch
-
-import torch
-import torchvision.models as models
-from torchvision import transforms
 
 # Import authentication and database functions
 from auth import register_user, login_user
@@ -21,7 +15,7 @@ from database import init_db, insert_upload, get_user_uploads
 # Initialize the database
 init_db()
 
-# Initialize session state variables if they don't exist
+# Initialize session state variables
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'username' not in st.session_state:
@@ -29,81 +23,84 @@ if 'username' not in st.session_state:
 if 'user_id' not in st.session_state:
     st.session_state.user_id = None
 
-# Load model
+# Set page config
+st.set_page_config(
+    page_title="Crop Disease Detection",
+    page_icon="🌱",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Class labels (must match your training)
+CLASS_LABELS = {
+    0: 'Tomato - Healthy',
+    1: 'Tomato - Leaf Mold',
+    2: 'Tomato - Yellow Leaf Curl Virus',
+    3: 'Tomato - Septoria Leaf Spot',
+    4: 'Potato - Healthy',
+    5: 'Potato - Late Blight',
+    6: 'Potato - Early Blight',
+    7: 'Corn - Healthy',
+    8: 'Corn - Northern Leaf Blight',
+    9: 'Corn - Common Rust',
+    10: 'Corn - Gray Leaf Spot',
+    11: 'Rice - Healthy',
+    12: 'Rice - Blast',
+    13: 'Rice - Bacterial Leaf Blight',
+    14: 'Rice - Brown Spot'
+}
+
+# Load the pre-trained model
+@st.cache_resource
 def load_model():
-    # 1. Initialize the exact same architecture as used in training
-    model = models.resnet50(weights=None)  # No pre-trained weights
-    
-    # 2. Recreate the custom classifier head (must match training exactly)
-    model.fc = torch.nn.Sequential(
-        torch.nn.Linear(model.fc.in_features, 1024),
-        torch.nn.ReLU(),
-        torch.nn.Dropout(0.5),
-        torch.nn.Linear(1024, 512),
-        torch.nn.ReLU(),
-        torch.nn.Dropout(0.3),
-        torch.nn.Linear(512, 15)  #  classes based on your training code
-    )
-    
-    # 3. Load the saved state_dict
-    model.load_state_dict(torch.load("Model/crop_disease_model.pth", map_location='cpu'))
-    
-    # 4. Set to evaluation mode
+    model = models.resnet50(weights=None)
+    num_classes = 15
+    model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
+    model.load_state_dict(torch.load('Model/crop_disease_model.pth', map_location=torch.device('cpu')))
     model.eval()
     return model
 
-# Load disease information
+# Load disease info
 def load_disease_info():
-    with open('disease_info.json', 'r') as file:
-        disease_info = json.load(file)
-    return disease_info
+    with open('disease_info.json', 'r') as f:
+        return json.load(f)
 
-# Function to make predictions
-def predict_disease(uploaded_file, model):
-    # Load disease info
-    disease_info = load_disease_info()
-    
-    # Make prediction
-    disease, confidence, fun_fact, treatment = predict_disease_streamlit(
-        uploaded_file, model, disease_info
-    )
-    
-    return disease, confidence, fun_fact, treatment
-    # For demonstration purposes:
-    image = Image.open(image)
-    image = image.resize((224, 224))
-    
-    # Convert image to appropriate format for your model
-    # image_array = np.array(image) / 255.0
-    # prediction = model.predict(np.expand_dims(image_array, axis=0))
-    
-    # Simulating a prediction result
-    prediction = "Apple Black Rot"
-    confidence = 0.92
-    
-    return prediction, confidence
+# Image preprocessing
+def preprocess_image(image):
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    img = image.convert('RGB')
+    img = transform(img).unsqueeze(0)
+    return img
+
+# Prediction function
+def predict_disease(image, model):
+    img = preprocess_image(image)
+    with torch.no_grad():
+        output = model(img)
+        _, predicted = torch.max(output, 1)
+        predicted_class = predicted.item()
+        confidence = torch.nn.functional.softmax(output, dim=1)[0][predicted].item()
+    return CLASS_LABELS[predicted_class], confidence
 
 # Function to save uploaded image
 def save_uploaded_image(uploaded_file, username):
-    # Create directory if it doesn't exist
     save_dir = Path(f"uploads/{username}")
     save_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Generate unique filename
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     file_extension = Path(uploaded_file.name).suffix
     filename = f"{timestamp}{file_extension}"
-    
-    # Save the file
     save_path = save_dir / filename
     with open(save_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
-    
     return str(save_path)
 
 # Main app
 def main():
-    st.title("Crop Disease Detection")
+    st.title("🌱 Crop Disease Detection")
     
     # Sidebar for authentication
     with st.sidebar:
@@ -127,7 +124,7 @@ def main():
                             st.success("Successfully logged in!")
                             st.rerun()
                         else:
-                            st.error(user_id)  # Error message
+                            st.error(user_id)
                     else:
                         st.warning("Please enter both username and password")
             
@@ -160,11 +157,10 @@ def main():
                 user_uploads = get_user_uploads(st.session_state.user_id)
                 if user_uploads:
                     for upload in user_uploads:
-                        with st.expander(f"{upload['disease_prediction']} - {upload['upload_date']}"):
+                        with st.expander(f"{upload['disease_prediction']} - {upload['upload_date'].strftime('%Y-%m-%d %H:%M')}"):
                             st.write(f"Confidence: {upload['confidence']:.2f}")
-                            # Uncomment to display images
-                            # if os.path.exists(upload['image_path']):
-                            #     st.image(upload['image_path'], width=150)
+                            if os.path.exists(upload['image_path']):
+                                st.image(upload['image_path'], width=150)
                 else:
                     st.info("You haven't uploaded any images yet.")
     
@@ -175,45 +171,53 @@ def main():
         
         if uploaded_file is not None:
             try:
-                # Display uploaded image
-                st.image(uploaded_file, caption="Uploaded Image", width=300)
+                image = Image.open(uploaded_file)
+                st.image(image, caption='Uploaded Image', use_column_width=True)
                 
-                # Load model and disease info
-                model = load_model()  # Comment this if you don't have the model yet
-                disease_info = load_disease_info()
-                
-                if st.button("Predict Disease"):
-                    # Save the uploaded image
-                    image_path = save_uploaded_image(uploaded_file, st.session_state.username)
-                    
-                    # Make prediction
-                    disease, confidence, fun_fact, treatment = predict_disease(uploaded_file, model)
-
-                    
-                    # Save to database
-                    upload_data = {
-                        "user_id": st.session_state.user_id,
-                        "image_path": image_path,
-                        "disease_prediction": disease,
-                        "confidence": confidence,
-                        "upload_date": datetime.datetime.utcnow()
-                    }
-                    insert_upload(upload_data)
-                    
-                    # Display results
-                    st.success(f"Prediction: {disease}")
-                    st.progress(confidence)
-                    st.write(f"Confidence: {confidence:.2f}")
-                    
-                    # Display disease information
-                    if disease in disease_info:
-                        info = disease_info[disease]
-                        st.subheader("Disease Information")
-                        st.write(f"**Fun Fact:** {info['fun_fact']}")
-                        st.subheader("Treatment Method")
-                        st.write(info['treatment'])
-                    else:
-                        st.warning("Detailed information not available for this disease")
+                if st.button('Analyze'):
+                    with st.spinner('Analyzing the image...'):
+                        # Load model and disease info
+                        model = load_model()
+                        disease_info = load_disease_info()
+                        
+                        # Make prediction
+                        prediction, confidence = predict_disease(image, model)
+                        info = disease_info.get(prediction, {})
+                        
+                        # Save the uploaded image
+                        image_path = save_uploaded_image(uploaded_file, st.session_state.username)
+                        
+                        # Save to database
+                        upload_data = {
+                            "user_id": st.session_state.user_id,
+                            "image_path": image_path,
+                            "disease_prediction": prediction,
+                            "confidence": confidence,
+                            "upload_date": datetime.datetime.utcnow()
+                        }
+                        insert_upload(upload_data)
+                        
+                        st.success("Analysis Complete!")
+                        
+                        # Display results
+                        col1, col2 = st.columns([1, 2])
+                        
+                        with col1:
+                            st.subheader("Prediction Result")
+                            st.markdown(f"**{prediction}**")
+                            st.image(image, use_column_width=True)
+                        
+                        with col2:
+                            st.subheader("Disease Information")
+                            
+                            with st.expander("Symptoms", expanded=True):
+                                st.info(info.get('symptoms', 'No symptoms information available'))
+                            
+                            with st.expander("Treatment Recommendations"):
+                                st.warning(info.get('treatment', 'No treatment information available'))
+                            
+                            with st.expander("Did You Know?"):
+                                st.success(info.get('fun_fact', 'No fun facts available'))
             
             except Exception as e:
                 st.error(f"Error processing image: {str(e)}")
