@@ -10,3 +10,5 @@ pandas
 numpy
 pymongo[srv]
 python-dotenv
+torch
+torchvision

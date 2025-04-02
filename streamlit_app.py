@@ -8,6 +8,11 @@ from PIL import Image
 import datetime
 from pathlib import Path
 import hashlib
+import torch
+
+import torch
+import torchvision.models as models
+from torchvision import transforms
 
 # Import authentication and database functions
 from auth import register_user, login_user
@@ -38,10 +43,16 @@ def load_disease_info():
     return disease_info
 
 # Function to make predictions
-def predict_disease(image, model):
-    # Preprocess image and make prediction
-    # This is a placeholder - replace with your actual prediction code
+def predict_disease(uploaded_file, model):
+    # Load disease info
+    disease_info = load_disease_info()
     
+    # Make prediction
+    disease, confidence, fun_fact, treatment = predict_disease_streamlit(
+        uploaded_file, model, disease_info
+    )
+    
+    return disease, confidence, fun_fact, treatment
     # For demonstration purposes:
     image = Image.open(image)
     image = image.resize((224, 224))
@@ -160,7 +171,8 @@ def main():
                     image_path = save_uploaded_image(uploaded_file, st.session_state.username)
                     
                     # Make prediction
-                    disease, confidence = predict_disease(uploaded_file, model)
+                    disease, confidence, fun_fact, treatment = predict_disease(uploaded_file, model)
+
                     
                     # Save to database
                     upload_data = {
