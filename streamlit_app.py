@@ -26,7 +26,7 @@ if 'user_id' not in st.session_state:
 
 # Load model
 def load_model():
-    model_path = Path("Model/crop_disease_model.pkl")
+    model_path = Path("Model/crop_disease_model.pth")
     with open(model_path, 'rb') as file:
         model = pickle.load(file)
     return model
