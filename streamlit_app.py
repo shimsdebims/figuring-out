@@ -20,6 +20,10 @@ def test_db_connection():
     except Exception as e:
         st.sidebar.error(f"MongoDB connection failed: {str(e)}")
 
+from database import test_connection
+if not test_connection():
+    st.error("Failed to connect to MongoDB. Please check your connection settings.")
+    st.stop()  # Stop the app if connection fails
 
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
@@ -141,19 +145,46 @@ def main():
                     else:
                         st.warning("Please enter both username and password")
             
-            with tab2:
-                st.subheader("Register")
-                reg_username = st.text_input("Username", key="reg_username")
-                reg_password = st.text_input("Password", type="password", key="reg_password")
-                reg_email = st.text_input("Email", key="reg_email")
-                
+                    with tab2:
+                        st.subheader("Register")
+                        reg_username = st.text_input("Username", key="reg_username")
+                        reg_password = st.text_input("Password", type="password", key="reg_password")
+                        reg_email = st.text_input("Email", key="reg_email")
+    
                 if st.button("Register"):
                     if reg_username and reg_password and reg_email:
-                        success, message = register_user(reg_username, reg_password, reg_email)
-                        if success:
-                            st.success("Registration successful! Please login.")
-                        else:
-                            st.error(f"Database error during registration")
+                        try:
+                            # Debug print
+                            st.write("Attempting registration...")
+                            
+                            # Create user data
+                            user_data = {
+                                "username": reg_username,
+                                "password": hash_password(reg_password),
+                                "email": reg_email,
+                                "created_at": datetime.datetime.utcnow()
+                            }
+                            
+                            # Debug print
+                            st.write("User data prepared:", user_data)
+                            
+                            # Attempt registration
+                            success, message = register_user(reg_username, reg_password, reg_email)
+                            
+                            if success:
+                                st.success("Registration successful! Please login.")
+                                st.balloons()
+                            else:
+                                st.error(f"Registration failed: {message}")
+                                
+                            # Debug print
+                            st.write("Registration attempt complete")
+                            
+                        except Exception as e:
+                            st.error(f"Database error during registration: {str(e)}")
+                            # Add detailed error logging
+                            st.write("Full error details:")
+                            st.exception(e)
                     else:
                         st.warning("Please fill all fields")
                         

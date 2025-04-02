@@ -7,6 +7,7 @@ from pymongo.errors import ConnectionFailure, DuplicateKeyError, OperationFailur
 # Load environment variables from .env file
 load_dotenv()
 
+# Get the connection string from the environment variable
 def get_database():
     """Connect to MongoDB and return the database"""
     try:
@@ -31,6 +32,19 @@ def get_database():
         print(f"Failed to connect to MongoDB: {e}")
         raise
 
+def test_connection():
+    try:
+        db = get_database()
+        # Try a simple command
+        db.command('ping')
+        print("✅ MongoDB connection successful!")
+        print(f"Database name: {db.name}")
+        print(f"Collections: {db.list_collection_names()}")
+        return True
+    except Exception as e:
+        print(f"❌ MongoDB connection failed: {str(e)}")
+        return False
+    
 def init_db():
     """Initialize database indexes (skip collection creation since they exist)"""
     try:
@@ -66,12 +80,28 @@ def insert_user(user_data):
     """Insert a new user into the database"""
     try:
         db = get_database()
+        
+        # Debug: Print the user data being inserted
+        print("Attempting to insert user:", user_data)
+        
+        # Verify the users collection exists
+        if "users" not in db.list_collection_names():
+            raise Exception("Users collection does not exist")
+            
+        # Insert the user
         result = db.users.insert_one(user_data)
+        
+        # Debug: Print the result
+        print("Insert result:", result.inserted_id)
+        
         return True, str(result.inserted_id)
+        
     except DuplicateKeyError:
         return False, "Username already exists"
     except Exception as e:
-        return False, str(e)
+        # More detailed error reporting
+        print(f"Error inserting user: {str(e)}")
+        return False, f"Database error: {str(e)}"
 
 def insert_upload(upload_data):
     """Insert an upload record into the database"""
