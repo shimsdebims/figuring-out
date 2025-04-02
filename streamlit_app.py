@@ -120,94 +120,68 @@ def main():
     st.title("🌱 Crop Disease Detection")
     
     # Sidebar for authentication
-    with st.sidebar:
-        st.title("User Account")
-        
-        if not st.session_state.logged_in:
-            tab1, tab2 = st.tabs(["Login", "Register"])
-            
-            with tab1:
-                st.subheader("Login")
-                login_username = st.text_input("Username", key="login_username")
-                login_password = st.text_input("Password", type="password", key="login_password")
-                
-                if st.button("Login"):
-                    if login_username and login_password:
-                        success, user_id = login_user(login_username, login_password)
-                        if success:
-                            st.session_state.logged_in = True
-                            st.session_state.username = login_username
-                            st.session_state.user_id = user_id
-                            st.success("Successfully logged in!")
-                            st.rerun()
-                        else:
-                            st.error(user_id)
-                    else:
-                        st.warning("Please enter both username and password")
-            
-                    with tab2:
-                        st.subheader("Register")
-                        reg_username = st.text_input("Username", key="reg_username")
-                        reg_password = st.text_input("Password", type="password", key="reg_password")
-                        reg_email = st.text_input("Email", key="reg_email")
+    # Authentication sidebar - SIMPLIFIED VERSION
+with st.sidebar:
+    st.title("User Account")
     
-                if st.button("Register"):
-                    if reg_username and reg_password and reg_email:
-                        try:
-                            # Debug print
-                            st.write("Attempting registration...")
-                            
-                            # Create user data
-                            user_data = {
-                                "username": reg_username,
-                                "password": hash_password(reg_password),
-                                "email": reg_email,
-                                "created_at": datetime.datetime.utcnow()
-                            }
-                            
-                            # Debug print
-                            st.write("User data prepared:", user_data)
-                            
-                            # Attempt registration
-                            success, message = register_user(reg_username, reg_password, reg_email)
-                            
-                            if success:
-                                st.success("Registration successful! Please login.")
-                                st.balloons()
-                            else:
-                                st.error(f"Registration failed: {message}")
-                                
-                            # Debug print
-                            st.write("Registration attempt complete")
-                            
-                        except Exception as e:
-                            st.error(f"Database error during registration: {str(e)}")
-                            # Add detailed error logging
-                            st.write("Full error details:")
-                            st.exception(e)
-                    else:
-                        st.warning("Please fill all fields")
-                        
+    if not st.session_state.logged_in:
+        # Always show both tabs
+        login_tab, register_tab = st.tabs(["Login", "Register"])
         
-        else:
-            st.write(f"Logged in as: **{st.session_state.username}**")
-            if st.button("Logout"):
-                st.session_state.logged_in = False
-                st.session_state.username = None
-                st.session_state.user_id = None
-                st.rerun()
+        with login_tab:
+            st.subheader("Login")
+            login_username = st.text_input("Username", key="login_username")
+            login_password = st.text_input("Password", type="password", key="login_password")
             
-            st.subheader("Your Previous Uploads")
-            if st.session_state.user_id:
-                user_uploads = get_user_uploads(st.session_state.user_id)
-                if user_uploads:
-                    for upload in user_uploads:
-                        with st.expander(f"{upload['disease_prediction']} - {upload['upload_date'].strftime('%Y-%m-%d %H:%M')}"):
-                            st.write(f"Confidence: {upload['confidence']:.2f}")
-                            if os.path.exists(upload['image_path']):
-                                st.image(upload['image_path'], width=150)
+            if st.button("Login"):
+                if login_username and login_password:
+                    success, message = login_user(login_username, login_password)
+                    if success:
+                        st.session_state.logged_in = True
+                        st.session_state.username = login_username
+                        st.session_state.user_id = message
+                        st.success("Logged in successfully!")
+                        st.rerun()
+                    else:
+                        st.error(message)
                 else:
-                    st.info("You haven't uploaded any images yet.")
+                    st.warning("Please enter both username and password")
+        
+        with register_tab:
+            st.subheader("Register")
+            reg_username = st.text_input("Choose Username", key="reg_username")
+            reg_password = st.text_input("Choose Password", type="password", key="reg_password")
+            reg_email = st.text_input("Email Address", key="reg_email")
+            
+            if st.button("Create Account"):
+                if reg_username and reg_password and reg_email:
+                    success, message = register_user(reg_username, reg_password, reg_email)
+                    if success:
+                        st.success("Account created! Please login.")
+                    else:
+                        st.error(message)
+                else:
+                    st.warning("Please fill all fields")
+    
+    else:
+        st.write(f"Welcome, **{st.session_state.username}**")
+        if st.button("Logout"):
+            st.session_state.logged_in = False
+            st.session_state.username = None
+            st.session_state.user_id = None
+            st.success("Logged out successfully!")
+            st.rerun()
+        
+        st.subheader("Your Upload History")
+        uploads = get_user_uploads(st.session_state.user_id)
+        if uploads:
+            for upload in uploads:
+                with st.expander(f"{upload['disease_prediction']} - {upload['upload_date'].strftime('%Y-%m-%d')}"):
+                    st.write(f"Confidence: {upload['confidence']:.2f}")
+                    if os.path.exists(upload['image_path']):
+                        st.image(upload['image_path'], width=150)
+        else:
+            st.info("No uploads yet")
     
     # Main content
     if st.session_state.logged_in:
