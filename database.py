@@ -2,7 +2,7 @@ import pymongo
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-from pymongo.errors import ConnectionFailure, DuplicateKeyError
+from pymongo.errors import ConnectionFailure, DuplicateKeyError, OperationFailure
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,36 +25,33 @@ def get_database():
         
         # Verify the connection works
         client.admin.command('ping')
-        return client["CropDiseaseDB"]  # Note: Case-sensitive database name
-    
+        return client.get_database()  # This will use the database specified in the URI
+        
     except Exception as e:
         print(f"Failed to connect to MongoDB: {e}")
         raise
 
 def init_db():
-    """Initialize database collections and indexes"""
+    """Initialize database indexes (skip collection creation since they exist)"""
     try:
         db = get_database()
         
-        # Create users collection if it doesn't exist
-        if "users" not in db.list_collection_names():
-            db.create_collection("users")
+        # Check if collections exist and create indexes
+        if "users" in db.list_collection_names():
+            db.users.create_index([("username", pymongo.ASCENDING)], unique=True)
         
-        # Create index for users collection
-        db.users.create_index([("username", pymongo.ASCENDING)], unique=True)
+        if "uploads" in db.list_collection_names():
+            db.uploads.create_index([("user_id", pymongo.ASCENDING)])
         
-        # Create uploads collection if it doesn't exist
-        if "uploads" not in db.list_collection_names():
-            db.create_collection("uploads")
-        
-        # Create index for uploads collection
-        db.uploads.create_index([("user_id", pymongo.ASCENDING)])
-        
-        print("Database initialized successfully")
+        print("Database indexes initialized successfully")
+        return True
     
+    except OperationFailure as e:
+        print(f"Database operation failed (you may need admin privileges): {e}")
+        return False
     except Exception as e:
         print(f"Error initializing database: {e}")
-        raise
+        return False
 
 def find_user_by_username(username):
     """Find a user by username"""

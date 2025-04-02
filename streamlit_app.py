@@ -7,11 +7,8 @@ import os
 import datetime
 from pathlib import Path
 import hashlib
-
-# Import authentication and database functions
 from auth import register_user, login_user
 from database import init_db, insert_upload, get_user_uploads
-# At the top of your file
 from database import get_database
 
 # Right after your imports
@@ -23,10 +20,6 @@ def test_db_connection():
     except Exception as e:
         st.sidebar.error(f"MongoDB connection failed: {str(e)}")
 
-# In your main() function, before any other code
-test_db_connection()
-# Initialize the database
-init_db()
 
 # Initialize session state variables
 if 'logged_in' not in st.session_state:
@@ -112,6 +105,13 @@ def save_uploaded_image(uploaded_file, username):
     return str(save_path)
 
 # Main app
+test_db_connection()
+# Initialize the database
+if not init_db():
+    st.error("Failed to initialize database connection. Some features may not work.")
+else:
+    st.success("Database connection established successfully")
+
 def main():
     st.title("🌱 Crop Disease Detection")
     
