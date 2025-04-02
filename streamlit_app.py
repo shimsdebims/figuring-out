@@ -32,8 +32,8 @@ if 'user_id' not in st.session_state:
 # Load model
 def load_model():
     model_path = Path("Model/crop_disease_model.pth")
-    with open(model_path, 'rb') as file:
-        model = pickle.load(file)
+    model = torch.load(model_path, map_location=torch.device('cpu'))  # ✅ Correct way
+    model.eval()  # Set to evaluation mode
     return model
 
 # Load disease information
