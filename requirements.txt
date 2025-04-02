@@ -3,3 +3,10 @@ torch==2.2.1
 torchvision==0.17.1
 Pillow==10.2.0
 streamlit==1.31.1
+
+streamlit
+pillow
+pandas
+numpy
+pymongo[srv]
+python-dotenv
