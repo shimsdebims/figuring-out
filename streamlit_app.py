@@ -1,9 +1,24 @@
+
 import streamlit as st
 import torch
 from torchvision import models, transforms
 from PIL import Image
 import json
 import os
+from pymongo import MongoClient
+import bcrypt
+from dotenv import load_dotenv
+import time
+
+# Load environment variables
+load_dotenv()
+MONGO_URI = os.getenv("MONGO_URI")
+
+# Connect to MongoDB
+client = MongoClient(MONGO_URI)
+db = client.CropDiseaseDB
+users_collection = db.users
+uploads_collection = db.uploads
 
 # Set page config
 st.set_page_config(
@@ -68,8 +83,80 @@ def predict_disease(image):
         predicted_class = predicted.item()
     return CLASS_LABELS[predicted_class], DISEASE_INFO.get(CLASS_LABELS[predicted_class], {})
 
-# Main app
-def main():
+# Authentication functions
+def create_user(username, password):
+    if users_collection.find_one({"username": username}):
+        return False
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    users_collection.insert_one({"username": username, "password": hashed})
+    return True
+
+def verify_user(username, password):
+    user = users_collection.find_one({"username": username})
+    if user and bcrypt.checkpw(password.encode('utf-8'), user["password"]):
+        return True
+    return False
+
+def store_upload(username, image_bytes, prediction, timestamp):
+    uploads_collection.insert_one({
+        "username": username,
+        "image": image_bytes,
+        "prediction": prediction,
+        "timestamp": timestamp
+    })
+
+# Authentication page
+def auth_page():
+    st.title("🌱 Crop Disease Detection")
+    
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    
+    if not st.session_state.logged_in:
+        tab1, tab2 = st.tabs(["Login", "Register"])
+        
+        with tab1:
+            with st.form("login_form"):
+                st.subheader("Login")
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                submit = st.form_submit_button("Login")
+                
+                if submit:
+                    if verify_user(username, password):
+                        st.session_state.logged_in = True
+                        st.session_state.username = username
+                        st.success("Logged in successfully!")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("Invalid username or password")
+        
+        with tab2:
+            with st.form("register_form"):
+                st.subheader("Register")
+                new_username = st.text_input("Choose a username")
+                new_password = st.text_input("Choose a password", type="password")
+                confirm_password = st.text_input("Confirm password", type="password")
+                submit = st.form_submit_button("Register")
+                
+                if submit:
+                    if new_password != confirm_password:
+                        st.error("Passwords don't match!")
+                    elif create_user(new_username, new_password):
+                        st.success("Account created successfully! Please login.")
+                    else:
+                        st.error("Username already exists")
+    else:
+        st.sidebar.success(f"Logged in as {st.session_state.username}")
+        if st.sidebar.button("Logout"):
+            st.session_state.logged_in = False
+            st.session_state.pop("username", None)
+            st.rerun()
+        main_app()
+
+# Main app (only accessible after login)
+def main_app():
     st.title("🌱 Crop Disease Detection")
     st.markdown("Upload an image of a plant leaf to detect potential diseases and get treatment recommendations.")
 
@@ -82,6 +169,11 @@ def main():
         if st.button('Analyze'):
             with st.spinner('Analyzing the image...'):
                 prediction, disease_info = predict_disease(image)
+                
+                # Store the upload in MongoDB
+                image_bytes = uploaded_file.getvalue()
+                timestamp = time.time()
+                store_upload(st.session_state.username, image_bytes, prediction, timestamp)
                 
                 st.success("Analysis Complete!")
                 
@@ -107,4 +199,4 @@ def main():
                         st.success(disease_info['fun_fact'])
 
 if __name__ == '__main__':
-    main()
+    auth_page()
