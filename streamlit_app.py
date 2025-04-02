@@ -31,9 +31,25 @@ if 'user_id' not in st.session_state:
 
 # Load model
 def load_model():
-    model_path = Path("Model/crop_disease_model.pth")
-    model = torch.load(model_path, map_location=torch.device('cpu'))  # ✅ Correct way
-    model.eval()  # Set to evaluation mode
+    # 1. Initialize the exact same architecture as used in training
+    model = models.resnet50(weights=None)  # No pre-trained weights
+    
+    # 2. Recreate the custom classifier head (must match training exactly)
+    model.fc = torch.nn.Sequential(
+        torch.nn.Linear(model.fc.in_features, 1024),
+        torch.nn.ReLU(),
+        torch.nn.Dropout(0.5),
+        torch.nn.Linear(1024, 512),
+        torch.nn.ReLU(),
+        torch.nn.Dropout(0.3),
+        torch.nn.Linear(512, 15)  #  classes based on your training code
+    )
+    
+    # 3. Load the saved state_dict
+    model.load_state_dict(torch.load("Model/crop_disease_model.pth", map_location='cpu'))
+    
+    # 4. Set to evaluation mode
+    model.eval()
     return model
 
 # Load disease information
