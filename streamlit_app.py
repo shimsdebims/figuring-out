@@ -11,7 +11,20 @@ import hashlib
 # Import authentication and database functions
 from auth import register_user, login_user
 from database import init_db, insert_upload, get_user_uploads
+# At the top of your file
+from database import get_database
 
+# Right after your imports
+def test_db_connection():
+    try:
+        db = get_database()
+        collections = db.list_collection_names()
+        st.sidebar.success(f"Connected to MongoDB! Collections: {collections}")
+    except Exception as e:
+        st.sidebar.error(f"MongoDB connection failed: {str(e)}")
+
+# In your main() function, before any other code
+test_db_connection()
 # Initialize the database
 init_db()
 
@@ -140,9 +153,10 @@ def main():
                         if success:
                             st.success("Registration successful! Please login.")
                         else:
-                            st.error(message)
+                            st.error(f"Database error during registration")
                     else:
                         st.warning("Please fill all fields")
+                        
         
         else:
             st.write(f"Logged in as: **{st.session_state.username}**")
@@ -195,9 +209,10 @@ def main():
                             "confidence": confidence,
                             "upload_date": datetime.datetime.utcnow()
                         }
-                        insert_upload(upload_data)
+                        success, message = insert_upload(upload_data)
+                        if not success:
+                            st.error(f"Failed to save to database: {message}")
                         
-                        st.success("Analysis Complete!")
                         
                         # Display results
                         col1, col2 = st.columns([1, 2])
