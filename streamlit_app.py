@@ -12,8 +12,24 @@ from auth import register_user, login_user
 from database import initialize_db, insert_upload, get_user_uploads
 from model import predict_disease, load_model
 
+def display_disease_info(disease):
+    """Display information about the detected disease"""
+    try:
+        with open("disease_info.json", "r") as f:
+            disease_info = json.load(f)
+            
+        if disease in disease_info:
+            info = disease_info[disease]
+            st.subheader("Disease Information")
+            st.write(f"**Symptoms:** {info['symptoms']}")
+            st.write(f"**Treatment:** {info['treatment']}")
+            st.write(f"**Fun Fact:** {info['fun_fact']}")
+        else:
+            st.warning(f"No information found for {disease}")
+    except Exception as e:
+        st.warning(f"Could not load disease information: {str(e)}")
+
 # Initialize database
-from database import initialize_db
 initialize_db()
 
 # Initialize session state
@@ -31,14 +47,17 @@ if 'model' not in st.session_state:
     try:
         st.session_state.model = load_model()
         st.session_state.model_loaded = True
+        st.session_state.model_load_error = None
     except Exception as e:
-        st.error(f"Could not load model: {str(e)}")
         st.session_state.model_loaded = False
+        st.session_state.model_load_error = str(e)
 
 def set_active_tab(tab):
+    """Set which authentication tab is active (login/register)"""
     st.session_state.active_tab = tab
 
 def toggle_camera():
+    """Toggle the camera on/off"""
     st.session_state.camera_on = not st.session_state.camera_on
 
 # Main title
@@ -52,14 +71,12 @@ with st.sidebar:
         # Custom tab selector
         col1, col2 = st.columns(2)
         with col1:
-            login_style = "color: red;" if st.session_state.active_tab == "login" else ""
-            if st.button("Login Tab", key="login_tab_btn", help="Switch to login"):
+            if st.button("Login Tab", key="login_tab_btn"):
                 set_active_tab("login")
                 st.rerun()
         
         with col2:
-            register_style = "color: red;" if st.session_state.active_tab == "register" else ""
-            if st.button("Register Tab", key="register_tab_btn", help="Switch to register"):
+            if st.button("Register Tab", key="register_tab_btn"):
                 set_active_tab("register")
                 st.rerun()
         
@@ -129,6 +146,11 @@ with st.sidebar:
 
 # Main app content
 if st.session_state.logged_in:
+    # Display model loading error if exists
+    if st.session_state.model_load_error:
+        st.warning(f"Model loading issue: {st.session_state.model_load_error}")
+        st.info("The app will use reduced functionality")
+    
     tab1, tab2 = st.tabs(["Upload Image", "Camera Capture"])
     
     with tab1:
@@ -176,74 +198,62 @@ if st.session_state.logged_in:
                         display_disease_info(disease)
             
             except Exception as e:
-                st.error(f"Error: {str(e)}")
+                st.error(f"Error processing image: {str(e)}")
     
     with tab2:
         st.header("Camera Capture")
-        camera_btn = st.button("Toggle Camera", on_click=toggle_camera)
+        
+        if st.button("Toggle Camera", key="toggle_camera_btn"):
+            toggle_camera()
         
         if st.session_state.camera_on:
-            camera_placeholder = st.empty()
-            capture_btn = st.button("Capture and Analyze")
+            # Use Streamlit's camera input
+            captured_image = st.camera_input("Take a picture of the plant")
             
-            camera_img = st.camera_input("Take a picture of the plant")
-            
-            if camera_img is not None and capture_btn:
-                with st.spinner("Analyzing captured image..."):
-                    # Ensure upload directory exists
-                    upload_dir = f"uploads/{st.session_state.username}"
-                    os.makedirs(upload_dir, exist_ok=True)
-                    
-                    # Save the image file
-                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                    image_path = os.path.join(upload_dir, f"capture_{timestamp}.jpg")
-                    
-                    # Convert BytesIO to Image and save
-                    image = Image.open(camera_img)
-                    image.save(image_path)
-                    
-                    # Make prediction using the model
-                    if st.session_state.model_loaded:
-                        disease, confidence = predict_disease(image_path, st.session_state.model)
-                    else:
-                        st.warning("Model not loaded. Using default prediction.")
-                        disease = "Unknown"
-                        confidence = 0.0
-                    
-                    # Save to database
-                    upload_data = {
-                        "user_id": st.session_state.user_id,
-                        "image_path": image_path,
-                        "disease_prediction": disease,
-                        "confidence": confidence,
-                        "upload_date": datetime.datetime.utcnow()
-                    }
-                    insert_upload(upload_data)
-                    
-                    st.success(f"Detected: {disease}")
-                    st.write(f"Confidence: {confidence:.0%}")
-                    
-                    # Display disease information
-                    display_disease_info(disease)
+            if captured_image is not None:
+                if st.button("Analyze Captured Image", key="analyze_capture"):
+                    with st.spinner("Analyzing captured image..."):
+                        try:
+                            # Ensure upload directory exists
+                            upload_dir = f"uploads/{st.session_state.username}"
+                            os.makedirs(upload_dir, exist_ok=True)
+                            
+                            # Save the image file
+                            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                            image_path = os.path.join(upload_dir, f"capture_{timestamp}.jpg")
+                            
+                            # Convert BytesIO to Image and save
+                            image = Image.open(captured_image)
+                            image.save(image_path)
+                            
+                            # Make prediction using the model
+                            if st.session_state.model_loaded:
+                                disease, confidence = predict_disease(image_path, st.session_state.model)
+                            else:
+                                st.warning("Model not loaded. Using default prediction.")
+                                disease = "Unknown"
+                                confidence = 0.0
+                            
+                            # Save to database
+                            upload_data = {
+                                "user_id": st.session_state.user_id,
+                                "image_path": image_path,
+                                "disease_prediction": disease,
+                                "confidence": confidence,
+                                "upload_date": datetime.datetime.utcnow()
+                            }
+                            insert_upload(upload_data)
+                            
+                            st.success(f"Detected: {disease}")
+                            st.write(f"Confidence: {confidence:.0%}")
+                            
+                            # Display disease information
+                            display_disease_info(disease)
+                        
+                        except Exception as e:
+                            st.error(f"Error processing captured image: {str(e)}")
         else:
-            st.info("Turn on the camera to capture and analyze plant images in real-time")
+            st.info("Turn on the camera to capture and analyze plant images")
 
 else:
     st.info("Please login or register in the sidebar to detect crop diseases")
-
-def display_disease_info(disease):
-    """Display information about the detected disease"""
-    try:
-        with open("disease_info.json", "r") as f:
-            disease_info = json.load(f)
-            
-        if disease in disease_info:
-            info = disease_info[disease]
-            st.subheader("Disease Information")
-            st.write(f"**Symptoms:** {info['symptoms']}")
-            st.write(f"**Treatment:** {info['treatment']}")
-            st.write(f"**Fun Fact:** {info['fun_fact']}")
-        else:
-            st.warning(f"No information found for {disease}")
-    except Exception as e:
-        st.warning(f"Could not load disease information: {str(e)}")

@@ -1,7 +1,8 @@
 Streamlit structure
 my_crop_disease_app/
 ├── streamlit_app.py        # Main application file
-├── database.py             # MongoDB connection and functions
+├── database.py
+├── model.py             
 ├── auth.py                 # Authentication functions
 ├── Model/                  # Your model folder
 │   └── crop_disease_model.pkl
