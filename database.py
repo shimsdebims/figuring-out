@@ -38,3 +38,20 @@ def insert_upload(upload_data):
 
 def get_user_uploads(user_id):
     return list(db.uploads.find({"user_id": user_id}).sort("upload_date", -1))
+
+def insert_model_version(version_data):
+    try:
+        result = db.model_versions.insert_one(version_data)
+        return True, str(result.inserted_id)
+    except Exception as e:
+        return False, str(e)
+
+def get_current_model_version():
+    return db.model_versions.find_one(sort=[("timestamp", -1)])
+
+def insert_feedback(feedback_data):
+    try:
+        result = db.feedback.insert_one(feedback_data)
+        return True, str(result.inserted_id)
+    except Exception as e:
+        return False, str(e)
