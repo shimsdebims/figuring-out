@@ -1,6 +1,6 @@
 /* Main app styling */
 .stApp {
-    background-color: #f5f7fa;
+    background-color: #2d3436;
     color: #2d3436;
 }
 
@@ -76,7 +76,7 @@ h1 {
 
 /* Disease info cards */
 .disease-card {
-    background-color: white;
+    background-color: rgb(9, 201, 89);
     border-radius: 8px;
     padding: 1rem;
     margin: 1rem 0;
