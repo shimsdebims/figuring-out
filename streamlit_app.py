@@ -13,6 +13,7 @@ from database import initialize_db, insert_upload, get_user_uploads
 from model import predict_disease, load_model
 
 # Initialize database
+from database import initialize_db
 initialize_db()
 
 # Initialize session state

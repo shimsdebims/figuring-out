@@ -9,7 +9,8 @@ try:
     with open("disease_info.json", "r") as f:
         disease_info = json.load(f)
         CLASS_NAMES = list(disease_info.keys())
-except:
+except Exception as e:
+    print(f"Error loading disease_info.json: {str(e)}")
     # Default class names if file not found
     CLASS_NAMES = [
         "Tomato - Healthy", "Tomato - Leaf Mold", "Tomato - Yellow Leaf Curl Virus", 
@@ -29,15 +30,17 @@ def load_model():
         "Model/model.tflite"
     ]
     
-    model = None
     for model_path in model_paths:
         if os.path.exists(model_path):
+            print(f"Found model at {model_path}")
             # Check file extension to determine model type
             if model_path.endswith('.h5'):
                 try:
-                    model = tf.keras.models.load_model(model_path)
-                    print(f"Loaded Keras model from {model_path}")
-                    break
+                    # Add this for compatibility with newer TF versions
+                    tf.keras.utils.disable_interactive_logging()
+                    model = tf.keras.models.load_model(model_path, compile=False)
+                    print(f"Successfully loaded Keras model from {model_path}")
+                    return model
                 except Exception as e:
                     print(f"Failed to load Keras model from {model_path}: {str(e)}")
             
@@ -46,15 +49,12 @@ def load_model():
                     # Load TFLite model
                     interpreter = tf.lite.Interpreter(model_path=model_path)
                     interpreter.allocate_tensors()
-                    print(f"Loaded TFLite model from {model_path}")
+                    print(f"Successfully loaded TFLite model from {model_path}")
                     return interpreter  # Return TFLite interpreter directly
                 except Exception as e:
                     print(f"Failed to load TFLite model from {model_path}: {str(e)}")
     
-    if model is None:
-        raise FileNotFoundError(f"No valid model found in the Model directory. Please ensure your trained model is in the Model directory.")
-    
-    return model
+    raise FileNotFoundError(f"No valid model found in the Model directory. Please ensure your trained model is in the Model directory.")
 
 def predict_disease(image_path, model=None):
     """
@@ -95,7 +95,7 @@ def predict_disease(image_path, model=None):
             predictions = model.get_tensor(output_details[0]['index'])[0]
         else:
             # Regular Keras model prediction
-            predictions = model.predict(img_array)[0]
+            predictions = model.predict(img_array, verbose=0)[0]
         
         # Get prediction and confidence
         predicted_class_idx = np.argmax(predictions)
