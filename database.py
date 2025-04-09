@@ -8,8 +8,9 @@ from pymongo.errors import DuplicateKeyError
 load_dotenv()
 
 # Connect to MongoDB
-client = MongoClient(os.getenv("MONGO_URI"))
-db = client["CropDiseaseDB"]  # Explicitly specify database name
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+client = MongoClient(MONGO_URI)
+db = client["cropDiseaseDB"]
 
 def initialize_db():
     """Create necessary indexes in the database"""
