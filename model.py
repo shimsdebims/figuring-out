@@ -30,9 +30,12 @@ else:
         CLASS_NAMES = ["Healthy"]
 
 def load_model():
-    """Load model from the correct location"""
-    # Exact path where your model is located
-    model_path = os.path.join("Models", "crop_model.h5")
+    """Load model using absolute path"""
+    # Get the directory where model.py is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Build absolute path to the model
+    model_path = os.path.join(current_dir, "Models", "crop_model.h5")
     
     logger.info(f"Attempting to load model from: {model_path}")
     
@@ -51,24 +54,6 @@ def load_model():
     else:
         logger.error(f"Model file not found at: {model_path}")
         raise FileNotFoundError(f"Model file not found at: {model_path}. Please check that this path is correct.")
-    
-    for path in model_paths:
-        if os.path.exists(path):
-            try:
-                # Disable TensorFlow logging
-                tf.get_logger().setLevel('ERROR')
-                tf.autograph.set_verbosity(0)
-                
-                model = tf.keras.models.load_model(path, compile=False)
-                logger.info(f"Successfully loaded model from {path}")
-                return model
-            except Exception as e:
-                logger.error(f"Failed to load model from {path}: {str(e)}")
-    
-    # If we reach here, no model was successfully loaded
-    logger.error("No valid model found in any of the searched locations")
-    # Return a dummy model or raise an exception
-    raise FileNotFoundError("No valid model found. Please check the model file path.")
 
 def is_plant_image(image):
     """Verify image contains plant material"""
