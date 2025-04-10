@@ -60,14 +60,14 @@ def find_model_file():
     # Start with likely locations
     possible_paths = [
         "crop_model.h5",                      # Current directory
-        "Models/crop_model.h5",               # Models subdirectory
+        "Model/crop_model.h5",               # Models subdirectory
         "Model/crop_model.h5",                # Model subdirectory
-        "../Models/crop_model.h5",            # Parent directory
+        "../Model/crop_model.h5",            # Parent directory
         "../crop_model.h5",                   # Parent directory root
         "/mount/src/crop_model.h5",           # Container mount paths
-        "/mount/src/Models/crop_model.h5",
+        "/mount/src/Model/crop_model.h5",
         "/mount/src/figuring-out/crop_model.h5",
-        "/mount/src/figuring-out/Models/crop_model.h5"
+        "/mount/src/figuring-out/Model/crop_model.h5"
     ]
     
     # Log where we're looking
