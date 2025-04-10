@@ -30,11 +30,9 @@ else:
         CLASS_NAMES = ["Healthy"]
 
 def load_model():
-
-    model_path= "Model/crop_model.h5"
     """Load model from the correct location"""
     # Exact path where your model is located
-    # model_path = os.path.join("Models", "crop_model.h5")
+    model_path = os.path.join("Models", "crop_model.h5")
     
     logger.info(f"Attempting to load model from: {model_path}")
     
