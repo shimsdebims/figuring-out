@@ -29,17 +29,77 @@ else:
         disease_info = {"Healthy": {"symptoms": "None", "treatment": "None", "fun_fact": "Healthy plants are happy plants!"}}
         CLASS_NAMES = ["Healthy"]
 
+# def load_model():
+#     """Load model using absolute path"""
+#     # Get the directory where model.py is located
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+#     # Build absolute path to the model
+#     model_path = os.path.join(current_dir, "Models", "crop_model.h5")
+    
+#     logger.info(f"Attempting to load model from: {model_path}")
+    
+#     if os.path.exists(model_path):
+#         try:
+#             # Disable TensorFlow logging
+#             tf.get_logger().setLevel('ERROR')
+#             tf.autograph.set_verbosity(0)
+            
+#             model = tf.keras.models.load_model(model_path, compile=False)
+#             logger.info(f"Successfully loaded model from {model_path}")
+#             return model
+#         except Exception as e:
+#             logger.error(f"Failed to load model from {model_path}: {str(e)}")
+#             raise
+#     else:
+#         logger.error(f"Model file not found at: {model_path}")
+#         raise FileNotFoundError(f"Model file not found at: {model_path}. Please check that this path is correct.")
+
+def find_model_file():
+    """Search for the model file in various possible locations"""
+    # Start with likely locations
+    possible_paths = [
+        "crop_model.h5",                      # Current directory
+        "Models/crop_model.h5",               # Models subdirectory
+        "Model/crop_model.h5",                # Model subdirectory
+        "../Models/crop_model.h5",            # Parent directory
+        "../crop_model.h5",                   # Parent directory root
+        "/mount/src/crop_model.h5",           # Container mount paths
+        "/mount/src/Models/crop_model.h5",
+        "/mount/src/figuring-out/crop_model.h5",
+        "/mount/src/figuring-out/Models/crop_model.h5"
+    ]
+    
+    # Log where we're looking
+    current_dir = os.getcwd()
+    logger.info(f"Current working directory: {current_dir}")
+    
+    # Check each path
+    for path in possible_paths:
+        if os.path.exists(path):
+            logger.info(f"Found model at: {path}")
+            return path
+        else:
+            logger.debug(f"Model not found at: {path}")
+    
+    # If we've searched all paths and found nothing
+    logger.error("Could not find model file in any expected location")
+    
+    # As a fallback, search recursively from current directory
+    logger.info("Performing recursive search for model file...")
+    for root, dirs, files in os.walk("."):
+        if "crop_model.h5" in files:
+            path = os.path.join(root, "crop_model.h5")
+            logger.info(f"Found model at: {path}")
+            return path
+    
+    return None
+
 def load_model():
-    """Load model using absolute path"""
-    # Get the directory where model.py is located
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    """Load model with comprehensive search"""
+    model_path = find_model_file()
     
-    # Build absolute path to the model
-    model_path = os.path.join(current_dir, "Models", "crop_model.h5")
-    
-    logger.info(f"Attempting to load model from: {model_path}")
-    
-    if os.path.exists(model_path):
+    if model_path:
         try:
             # Disable TensorFlow logging
             tf.get_logger().setLevel('ERROR')
@@ -52,8 +112,15 @@ def load_model():
             logger.error(f"Failed to load model from {model_path}: {str(e)}")
             raise
     else:
-        logger.error(f"Model file not found at: {model_path}")
-        raise FileNotFoundError(f"Model file not found at: {model_path}. Please check that this path is correct.")
+        # If we can't find the model file, we have two options:
+        # 1. Create a fallback dummy model for testing purposes
+        # 2. Raise an error to alert the user
+        
+        # For option 1 (dummy model for testing):
+        # return create_dummy_model()
+        
+        # For option 2 (raise error):
+        raise FileNotFoundError("Could not find model file. Please upload model file to the correct location.")
 
 def is_plant_image(image):
     """Verify image contains plant material"""
