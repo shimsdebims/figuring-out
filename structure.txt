@@ -1,12 +1,16 @@
-Streamlit structure
+Structure
 my_crop_disease_app/
-├── streamlit_app.py        # Main application file
+├── streamlit_app.py
 ├── database.py
-├── model.py             
-├── auth.py                 # Authentication functions
-├── Model/                  # Your model folder
-│   └── crop_disease_model.pkl
-├── uploads/                # Folder to store uploaded images
-├── disease_info.json       # Disease information
-├── requirements.txt        # Dependencies
-└── README.md               # Documentation
+├── model.py
+├── auth.py
+├── styles.css
+├── assets/
+│   ├── example_healthy.jpg
+│   ├── example_diseased.jpg
+│   ├── example_leaf.jpg
+├── Model/
+│   └── crop_model.h5
+├── disease_info.json
+├── requirements.txt
+└── README.md

@@ -3,6 +3,9 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 from pymongo.errors import DuplicateKeyError
+from bson.binary import Binary
+from PIL import Image
+import io
 
 # Load environment variables
 load_dotenv()
@@ -13,9 +16,10 @@ client = MongoClient(MONGO_URI)
 db = client["cropDiseaseDB"]
 
 def initialize_db():
-    """Create necessary indexes in the database"""
-    # Create unique index on username field to prevent duplicates
+    """Create necessary indexes"""
     db.users.create_index([("username", pymongo.ASCENDING)], unique=True)
+    db.uploads.create_index([("user_id", pymongo.ASCENDING)])
+    db.uploads.create_index([("upload_date", pymongo.DESCENDING)])
 
 def insert_user(user_data):
     try:
@@ -31,23 +35,31 @@ def find_user_by_username(username):
 
 def insert_upload(upload_data):
     try:
+        # Convert image to binary
+        if 'image' in upload_data:
+            upload_data['image_binary'] = Binary(upload_data['image'])
+            del upload_data['image']
+        
         result = db.uploads.insert_one(upload_data)
         return True, str(result.inserted_id)
     except Exception as e:
         return False, str(e)
 
-def get_user_uploads(user_id):
-    return list(db.uploads.find({"user_id": user_id}).sort("upload_date", -1))
-
-def insert_model_version(version_data):
-    try:
-        result = db.model_versions.insert_one(version_data)
-        return True, str(result.inserted_id)
-    except Exception as e:
-        return False, str(e)
-
-def get_current_model_version():
-    return db.model_versions.find_one(sort=[("timestamp", -1)])
+def get_user_uploads(user_id, limit=5):
+    """Get user uploads with image objects"""
+    uploads = list(db.uploads.find({"user_id": user_id})
+                  .sort("upload_date", -1)
+                  .limit(limit))
+    
+    # Convert binary to image
+    for upload in uploads:
+        if 'image_binary' in upload:
+            try:
+                upload['image'] = Image.open(io.BytesIO(upload['image_binary']))
+            except Exception as e:
+                upload['image_error'] = str(e)
+    
+    return uploads
 
 def insert_feedback(feedback_data):
     try:

@@ -1,163 +1,86 @@
 import os
-import json
 import numpy as np
 from PIL import Image
 import logging
+import tensorflow as tf
+import cv2
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Try to import TensorFlow
-TF_AVAILABLE = False
-try:
-    import tensorflow as tf
-    TF_AVAILABLE = True
-    logger.info("TensorFlow successfully imported")
-except ImportError as e:
-    logger.warning(f"TensorFlow not available: {str(e)}")
+# Single model path
+MODEL_PATH = os.path.join("Model", "crop_model.h5")  # Update with your model filename
 
-# Load class names from disease info
-try:
-    with open("disease_info.json", "r") as f:
-        disease_info = json.load(f)
-        CLASS_NAMES = list(disease_info.keys())
-    logger.info(f"Loaded {len(CLASS_NAMES)} disease classes")
-except Exception as e:
-    logger.error(f"Error loading disease_info.json: {str(e)}")
-    CLASS_NAMES = ["Unknown"]
+# Load class names
+with open("disease_info.json", "r") as f:
+    disease_info = json.load(f)
+    CLASS_NAMES = list(disease_info.keys())
 
 def load_model():
-    """Load the crop disease detection model"""
-    if not TF_AVAILABLE:
-        logger.warning("TensorFlow not available - using dummy model")
-        return "dummy_model"
+    """Load only the specified model"""
+    if not os.path.exists(MODEL_PATH):
+        logger.error(f"Model not found at {MODEL_PATH}")
+        raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
     
-    # Define possible model paths
-    model_paths = [
-        os.path.join("Model", "best_model.h5"),
-        os.path.join("Model", "plant_disease_model.h5"),
-        os.path.join("Model", "model.tflite"),
-        os.path.join("model", "best_model.h5"),  # Try lowercase directory
-        os.path.join("model", "plant_disease_model.h5"),
-        os.path.join("model", "model.tflite")
-    ]
-    
-    # Try each possible path
-    for model_path in model_paths:
-        if os.path.exists(model_path):
-            logger.info(f"Found model at {model_path}")
-            
-            try:
-                if model_path.endswith('.h5'):
-                    # Disable TensorFlow logging
-                    tf.get_logger().setLevel('ERROR')
-                    tf.autograph.set_verbosity(0)
-                    
-                    # Load Keras model
-                    model = tf.keras.models.load_model(model_path, compile=False)
-                    logger.info(f"Successfully loaded Keras model from {model_path}")
-                    
-                    # Print model summary for verification
-                    logger.info("Model summary:")
-                    model.summary(print_fn=logger.info)
-                    
-                    return model
-                
-                elif model_path.endswith('.tflite'):
-                    # Load TFLite model
-                    interpreter = tf.lite.Interpreter(model_path=model_path)
-                    interpreter.allocate_tensors()
-                    logger.info(f"Successfully loaded TFLite model from {model_path}")
-                    return interpreter
-            
-            except Exception as e:
-                logger.error(f"Failed to load model from {model_path}: {str(e)}")
-                continue
-    
-    logger.error("No valid model found in any of the searched locations")
-    return "dummy_model"
-
-# Add to model.py
-def is_plant_image(image):
-    """Basic verification if image contains plant leaves"""
     try:
-        # Convert to numpy array
+        # Disable TensorFlow logging
+        tf.get_logger().setLevel('ERROR')
+        tf.autograph.set_verbosity(0)
+        
+        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+        logger.info(f"Successfully loaded model from {MODEL_PATH}")
+        return model
+    except Exception as e:
+        logger.error(f"Failed to load model: {str(e)}")
+        raise
+
+def is_plant_image(image):
+    """Verify image contains plant material"""
+    try:
         img_array = np.array(image)
         
-        # Check dominant color is green (plant-like)
+        # Convert to HSV color space
         hsv = cv2.cvtColor(img_array, cv2.COLOR_RGB2HSV)
-        green_mask = cv2.inRange(hsv, (36, 25, 25), (86, 255, 255))
-        green_percentage = np.mean(green_mask > 0)
         
-        # Check texture (plants have more texture than faces)
-        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        # Define green color range
+        lower_green = np.array([35, 50, 50])
+        upper_green = np.array([85, 255, 255])
         
-        return green_percentage > 0.3 or laplacian_var > 100  # Adjust thresholds
-    except:
+        # Threshold the HSV image
+        mask = cv2.inRange(hsv, lower_green, upper_green)
+        green_percentage = np.mean(mask > 0)
+        
+        return green_percentage > 0.25  # At least 25% green pixels
+    except Exception as e:
+        logger.warning(f"Plant verification failed: {str(e)}")
         return False
 
-# Update predict_disease function
-def predict_disease(image_input, model=None):
-    # First verify it's a plant image
-    if isinstance(image_input, (str, os.PathLike)):
-        img = Image.open(image_input).convert('RGB')
-    else:
-        img = Image.open(image_input).convert('RGB')
-    
-    if not is_plant_image(img):
-        return "Not a plant image", 0.0
-    
-
-def predict_disease(image_path, model=None):
-    """Predict plant disease from an image"""
+def predict_disease(image_input):
+    """Make prediction with the loaded model"""
     try:
-        # Load model if not provided
-        if model is None:
-            model = load_model()
+        model = load_model()
         
-        # Dummy prediction if no proper model
-        if not TF_AVAILABLE or model == "dummy_model":
-            logger.warning("Using dummy prediction")
-            return "Tomato - Healthy", 0.95
+        # Open image
+        if isinstance(image_input, (str, os.PathLike)):
+            img = Image.open(image_input).convert('RGB')
+        else:
+            img = Image.open(image_input).convert('RGB')
         
-        # Load and preprocess image
-        img = Image.open(image_path).convert('RGB')
-        img = img.resize((224, 224))  # Standard size for most models
-        
-        # Convert to array and normalize
+        # Preprocess
+        img = img.resize((224, 224))
         img_array = np.array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
         
-        # Make prediction based on model type
-        if isinstance(model, tf.keras.Model):
-            # Keras model prediction
-            predictions = model.predict(img_array, verbose=0)[0]
-        elif isinstance(model, tf.lite.Interpreter):
-            # TFLite model prediction
-            input_details = model.get_input_details()
-            output_details = model.get_output_details()
-            model.set_tensor(input_details[0]['index'], img_array.astype(np.float32))
-            model.invoke()
-            predictions = model.get_tensor(output_details[0]['index'])[0]
-        else:
-            raise ValueError("Unsupported model type")
-        
-        # Process predictions
+        # Predict
+        predictions = model.predict(img_array, verbose=0)[0]
         predicted_idx = np.argmax(predictions)
         confidence = float(predictions[predicted_idx])
         
-        # Ensure we don't go out of bounds
-        if predicted_idx < len(CLASS_NAMES):
-            disease = CLASS_NAMES[predicted_idx]
-        else:
-            disease = "Unknown"
-            confidence = 0.0
+        # Get class name
+        disease = CLASS_NAMES[predicted_idx] if predicted_idx < len(CLASS_NAMES) else "Unknown"
         
-        logger.info(f"Prediction: {disease} with confidence {confidence:.2f}")
         return disease, confidence
-    
     except Exception as e:
-        logger.error(f"Prediction error: {str(e)}")
-        return "Unknown", 0.0
+        logger.error(f"Prediction failed: {str(e)}")
+        raise
