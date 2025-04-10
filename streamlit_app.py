@@ -27,6 +27,7 @@ load_css()
 # Initialize database
 initialize_db()
 
+
 # Initialize session state
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False

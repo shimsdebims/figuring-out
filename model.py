@@ -4,6 +4,7 @@ from PIL import Image
 import logging
 import tensorflow as tf
 import cv2
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,22 +19,30 @@ with open("disease_info.json", "r") as f:
     CLASS_NAMES = list(disease_info.keys())
 
 def load_model():
-    """Load only the specified model"""
-    if not os.path.exists(MODEL_PATH):
-        logger.error(f"Model not found at {MODEL_PATH}")
-        raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+    """Load model with fallbacks"""
+    model_paths = [
+        os.path.join("Model", "crop_model.h5"),
+        "crop_model.h5",  # Try root directory
+        os.path.join("..", "Model", "crop_model.h5")  # Try parent directory
+    ]
     
-    try:
-        # Disable TensorFlow logging
-        tf.get_logger().setLevel('ERROR')
-        tf.autograph.set_verbosity(0)
-        
-        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-        logger.info(f"Successfully loaded model from {MODEL_PATH}")
-        return model
-    except Exception as e:
-        logger.error(f"Failed to load model: {str(e)}")
-        raise
+    for path in model_paths:
+        if os.path.exists(path):
+            try:
+                # Disable TensorFlow logging
+                tf.get_logger().setLevel('ERROR')
+                tf.autograph.set_verbosity(0)
+                
+                model = tf.keras.models.load_model(path, compile=False)
+                logger.info(f"Successfully loaded model from {path}")
+                return model
+            except Exception as e:
+                logger.error(f"Failed to load model from {path}: {str(e)}")
+    
+    # If we reach here, no model was successfully loaded
+    logger.error("No valid model found in any of the searched locations")
+    # Return a dummy model or raise an exception
+    raise FileNotFoundError("No valid model found. Please check the model file path.")
 
 def is_plant_image(image):
     """Verify image contains plant material"""
@@ -84,3 +93,21 @@ def predict_disease(image_input):
     except Exception as e:
         logger.error(f"Prediction failed: {str(e)}")
         raise
+
+    disease_info_path = "disease_info.json"
+if not os.path.exists(disease_info_path):
+    logger.error(f"Disease info file not found at {disease_info_path}")
+    # Create a basic default
+    disease_info = {"Healthy": {"symptoms": "None", "treatment": "None", "fun_fact": "Healthy plants are happy plants!"}}
+    CLASS_NAMES = ["Healthy"]
+else:
+    try:
+        with open(disease_info_path, "r") as f:
+            disease_info = json.load(f)
+            CLASS_NAMES = list(disease_info.keys())
+            logger.info(f"Loaded {len(CLASS_NAMES)} disease classes")
+    except Exception as e:
+        logger.error(f"Error loading disease info: {str(e)}")
+        # Create a basic default
+        disease_info = {"Healthy": {"symptoms": "None", "treatment": "None", "fun_fact": "Healthy plants are happy plants!"}}
+        CLASS_NAMES = ["Healthy"]

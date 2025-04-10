@@ -6,6 +6,13 @@ from pymongo.errors import DuplicateKeyError
 from bson.binary import Binary
 from PIL import Image
 import io
+import base64
+import json
+import datetime
+import time
+import random
+import string
+import hashlib
 
 # Load environment variables
 load_dotenv()
@@ -20,6 +27,8 @@ def initialize_db():
     db.users.create_index([("username", pymongo.ASCENDING)], unique=True)
     db.uploads.create_index([("user_id", pymongo.ASCENDING)])
     db.uploads.create_index([("upload_date", pymongo.DESCENDING)])
+    ensure_upload_dirs()
+
 
 def insert_user(user_data):
     try:
@@ -67,3 +76,7 @@ def insert_feedback(feedback_data):
         return True, str(result.inserted_id)
     except Exception as e:
         return False, str(e)
+    
+    def ensure_upload_dirs():
+    """Ensure upload directories exist"""
+    os.makedirs("uploads", exist_ok=True)
