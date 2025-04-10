@@ -18,7 +18,7 @@ def is_strong_password(password):
     if not re.search(r"[A-Z]", password):
         return False, "Password must contain 1 uppercase letter"
     if not re.search(r"[0-9]", password):
-        return False, "Password must contain 1 number"
+        return False, "Password must contain 1 number" 
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
         return False, "Password must contain 1 special character"
     return True, ""
