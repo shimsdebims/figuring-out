@@ -17,16 +17,23 @@ from model import predict_disease, load_model, is_plant_image
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load custom CSS
-def load_css():
-    with open("styles.css") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# Check if styles.css exists
+if os.path.exists("styles.css"):
+    # Load custom CSS
+    def load_css():
+        with open("styles.css") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    load_css()
+else:
+    logger.warning("styles.css not found - app will use default styling")
 
-load_css()
+# Check if necessary directories exist
+if not os.path.exists("assets"):
+    os.makedirs("assets", exist_ok=True)
+    logger.warning("assets directory created - example images may not be available")
 
 # Initialize database
 initialize_db()
-
 
 # Initialize session state
 if 'logged_in' not in st.session_state:
@@ -37,17 +44,6 @@ if 'logged_in' not in st.session_state:
     st.session_state.camera_on = False
     st.session_state.model = None
     st.session_state.model_loaded = False
-
-# Load model (only once)
-if st.session_state.model is None:
-    try:
-        with st.spinner("🌱 Loading plant disease model..."):
-            st.session_state.model = load_model()
-            st.session_state.model_loaded = True
-            logger.info("Model loaded successfully")
-    except Exception as e:
-        st.error(f"❌ Failed to load model: {str(e)}")
-        st.stop()
 
 # Helper functions
 def display_disease_info(disease):
@@ -78,6 +74,19 @@ def log_prediction(user_id, image_path, prediction, confidence):
 # Main App
 st.title("🌱 Crop Disease Detection")
 
+# Try to load model (only once)
+if st.session_state.model is None:
+    try:
+        with st.spinner("🌱 Loading plant disease model..."):
+            st.session_state.model = load_model()
+            st.session_state.model_loaded = True
+            logger.info("Model loaded successfully")
+    except Exception as e:
+        st.error(f"❌ Failed to load model: {str(e)}")
+        st.warning("The app will continue loading, but image detection will not work.")
+        # Don't stop the app entirely - we'll just disable detection functionality
+        st.session_state.model_loaded = False
+
 # Home page (before login)
 if not st.session_state.logged_in:
     st.markdown("""
@@ -85,15 +94,22 @@ if not st.session_state.logged_in:
     Detect plant diseases instantly using AI. Upload or capture images of plant leaves to get started.
     """)
     
-    # Example images
+    # Example images - check if they exist first
     st.subheader("📸 Example Images")
     col1, col2, col3 = st.columns(3)
-    with col1:
-        st.image("assets/example_healthy.jpg", caption="Healthy Tomato Leaf")
-    with col2:
-        st.image("assets/example_diseased.jpg", caption="Diseased Potato Leaf")
-    with col3:
-        st.image("assets/example_leaf.jpg", caption="Proper Leaf Close-up")
+    example_paths = {
+        "assets/example_healthy.jpg": "Healthy Tomato Leaf",
+        "assets/example_diseased.jpg": "Diseased Potato Leaf",
+        "assets/example_leaf.jpg": "Proper Leaf Close-up"
+    }
+    
+    columns = [col1, col2, col3]
+    for i, (path, caption) in enumerate(example_paths.items()):
+        with columns[i]:
+            if os.path.exists(path):
+                st.image(path, caption=caption)
+            else:
+                st.info(f"Example image not found: {caption}")
     
     st.markdown("""
     ### 📝 Upload Guidelines:
@@ -189,77 +205,20 @@ else:
                 st.image(image, caption="Your uploaded image", use_column_width=True)
                 
                 if st.button("Analyze Image"):
-                    with st.spinner("🔍 Analyzing plant health..."):
-                        # Verify it's a plant image
-                        if not is_plant_image(image):
-                            st.error("This doesn't appear to be a plant leaf image. Please upload a clear photo of a plant leaf.")
-                        else:
-                            # Save to memory
-                            img_bytes = uploaded_file.getvalue()
-                            
-                            # Make prediction
-                            disease, confidence = predict_disease(BytesIO(img_bytes))
-                            log_prediction(st.session_state.user_id, "upload", disease, confidence)
-                            
-                            # Save to database
-                            upload_data = {
-                                "user_id": st.session_state.user_id,
-                                "image": img_bytes,
-                                "disease_prediction": disease,
-                                "confidence": confidence,
-                                "upload_date": datetime.datetime.now(datetime.UTC)
-                            }
-                            insert_upload(upload_data)
-                            
-                            st.success(f"🔬 Detection Result: **{disease}**")
-                            st.metric("Confidence Level", f"{confidence:.0%}")
-                            display_disease_info(disease)
-                            
-                            # Feedback system
-                            feedback = st.radio(
-                                "Was this prediction accurate?",
-                                ["Select option", "👍 Accurate", "👎 Inaccurate"],
-                                key="feedback"
-                            )
-                            if feedback != "Select option":
-                                insert_feedback({
-                                    "user_id": st.session_state.user_id,
-                                    "prediction": disease,
-                                    "feedback": feedback,
-                                    "timestamp": datetime.datetime.now(datetime.UTC)
-                                })
-                                st.success("Thank you for your feedback!")
-            
-            except Exception as e:
-                st.error(f"❌ Error processing image: {str(e)}")
-                logger.error(f"Upload error: {str(e)}")
-    
-    with tab2:
-        st.header("Real-time Camera Capture")
-        st.markdown("Capture clear photos of plant leaves for instant analysis")
-        
-        if st.button(f"{'📷 Turn Off Camera' if st.session_state.camera_on else '📸 Turn On Camera'}"):
-            st.session_state.camera_on = not st.session_state.camera_on
-            st.rerun()
-        
-        if st.session_state.camera_on:
-            captured_image = st.camera_input("Point camera at a plant leaf")
-            
-            if captured_image is not None:
-                if st.button("Analyze Capture"):
-                    with st.spinner("🔍 Analyzing plant health..."):
-                        try:
-                            image = Image.open(captured_image)
-                            
+                    if not st.session_state.model_loaded:
+                        st.error("❌ Model not loaded. Cannot analyze images.")
+                    else:
+                        with st.spinner("🔍 Analyzing plant health..."):
+                            # Verify it's a plant image
                             if not is_plant_image(image):
-                                st.error("This doesn't appear to be a plant leaf. Please capture a clear photo of a plant leaf.")
+                                st.error("This doesn't appear to be a plant leaf image. Please upload a clear photo of a plant leaf.")
                             else:
                                 # Save to memory
-                                img_bytes = captured_image.getvalue()
+                                img_bytes = uploaded_file.getvalue()
                                 
                                 # Make prediction
                                 disease, confidence = predict_disease(BytesIO(img_bytes))
-                                log_prediction(st.session_state.user_id, "camera", disease, confidence)
+                                log_prediction(st.session_state.user_id, "upload", disease, confidence)
                                 
                                 # Save to database
                                 upload_data = {
@@ -279,7 +238,7 @@ else:
                                 feedback = st.radio(
                                     "Was this prediction accurate?",
                                     ["Select option", "👍 Accurate", "👎 Inaccurate"],
-                                    key="camera_feedback"
+                                    key="feedback"
                                 )
                                 if feedback != "Select option":
                                     insert_feedback({
@@ -289,10 +248,73 @@ else:
                                         "timestamp": datetime.datetime.now(datetime.UTC)
                                     })
                                     st.success("Thank you for your feedback!")
-                        
-                        except Exception as e:
-                            st.error(f"❌ Error processing image: {str(e)}")
-                            logger.error(f"Camera error: {str(e)}")
+            
+            except Exception as e:
+                st.error(f"❌ Error processing image: {str(e)}")
+                logger.error(f"Upload error: {str(e)}")
+    
+    with tab2:
+        st.header("Real-time Camera Capture")
+        st.markdown("Capture clear photos of plant leaves for instant analysis")
+        
+        if st.button(f"{'📷 Turn Off Camera' if st.session_state.camera_on else '📸 Turn On Camera'}"):
+            st.session_state.camera_on = not st.session_state.camera_on
+            st.rerun()
+        
+        if st.session_state.camera_on:
+            captured_image = st.camera_input("Point camera at a plant leaf")
+            
+            if captured_image is not None:
+                if st.button("Analyze Capture"):
+                    if not st.session_state.model_loaded:
+                        st.error("❌ Model not loaded. Cannot analyze images.")
+                    else:
+                        with st.spinner("🔍 Analyzing plant health..."):
+                            try:
+                                image = Image.open(captured_image)
+                                
+                                if not is_plant_image(image):
+                                    st.error("This doesn't appear to be a plant leaf. Please capture a clear photo of a plant leaf.")
+                                else:
+                                    # Save to memory
+                                    img_bytes = captured_image.getvalue()
+                                    
+                                    # Make prediction
+                                    disease, confidence = predict_disease(BytesIO(img_bytes))
+                                    log_prediction(st.session_state.user_id, "camera", disease, confidence)
+                                    
+                                    # Save to database
+                                    upload_data = {
+                                        "user_id": st.session_state.user_id,
+                                        "image": img_bytes,
+                                        "disease_prediction": disease,
+                                        "confidence": confidence,
+                                        "upload_date": datetime.datetime.now(datetime.UTC)
+                                    }
+                                    insert_upload(upload_data)
+                                    
+                                    st.success(f"🔬 Detection Result: **{disease}**")
+                                    st.metric("Confidence Level", f"{confidence:.0%}")
+                                    display_disease_info(disease)
+                                    
+                                    # Feedback system
+                                    feedback = st.radio(
+                                        "Was this prediction accurate?",
+                                        ["Select option", "👍 Accurate", "👎 Inaccurate"],
+                                        key="camera_feedback"
+                                    )
+                                    if feedback != "Select option":
+                                        insert_feedback({
+                                            "user_id": st.session_state.user_id,
+                                            "prediction": disease,
+                                            "feedback": feedback,
+                                            "timestamp": datetime.datetime.now(datetime.UTC)
+                                        })
+                                        st.success("Thank you for your feedback!")
+                            
+                            except Exception as e:
+                                st.error(f"❌ Error processing image: {str(e)}")
+                                logger.error(f"Camera error: {str(e)}")
     
     with tab3:
         st.header("About CropGuard")

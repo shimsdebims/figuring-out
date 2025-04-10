@@ -4,7 +4,7 @@ from PIL import Image
 import logging
 import tensorflow as tf
 import cv2
-import json  # Add this import
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,8 +32,10 @@ else:
 def load_model():
     """Load model with fallbacks"""
     model_paths = [
+        os.path.join("Model", "crop_model.h5"), 
         os.path.join("Model", "crop_model.h5"),
         "crop_model.h5",  # Try root directory
+        os.path.join("..", "Model", "crop_model.h5"),  # Try parent directory
         os.path.join("..", "Model", "crop_model.h5")  # Try parent directory
     ]
     
