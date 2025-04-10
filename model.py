@@ -30,14 +30,29 @@ else:
         CLASS_NAMES = ["Healthy"]
 
 def load_model():
-    """Load model with fallbacks"""
-    model_paths = [
-        os.path.join("Model", "crop_model.h5"), 
-        os.path.join("Model", "crop_model.h5"),
-        "crop_model.h5",  # Try root directory
-        os.path.join("..", "Model", "crop_model.h5"),  # Try parent directory
-        os.path.join("..", "Model", "crop_model.h5")  # Try parent directory
-    ]
+
+    model_path= "Model/crop_model.h5"
+    """Load model from the correct location"""
+    # Exact path where your model is located
+    # model_path = os.path.join("Models", "crop_model.h5")
+    
+    logger.info(f"Attempting to load model from: {model_path}")
+    
+    if os.path.exists(model_path):
+        try:
+            # Disable TensorFlow logging
+            tf.get_logger().setLevel('ERROR')
+            tf.autograph.set_verbosity(0)
+            
+            model = tf.keras.models.load_model(model_path, compile=False)
+            logger.info(f"Successfully loaded model from {model_path}")
+            return model
+        except Exception as e:
+            logger.error(f"Failed to load model from {model_path}: {str(e)}")
+            raise
+    else:
+        logger.error(f"Model file not found at: {model_path}")
+        raise FileNotFoundError(f"Model file not found at: {model_path}. Please check that this path is correct.")
     
     for path in model_paths:
         if os.path.exists(path):
