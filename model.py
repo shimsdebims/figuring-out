@@ -78,6 +78,38 @@ def load_model():
     logger.error("No valid model found in any of the searched locations")
     return "dummy_model"
 
+# Add to model.py
+def is_plant_image(image):
+    """Basic verification if image contains plant leaves"""
+    try:
+        # Convert to numpy array
+        img_array = np.array(image)
+        
+        # Check dominant color is green (plant-like)
+        hsv = cv2.cvtColor(img_array, cv2.COLOR_RGB2HSV)
+        green_mask = cv2.inRange(hsv, (36, 25, 25), (86, 255, 255))
+        green_percentage = np.mean(green_mask > 0)
+        
+        # Check texture (plants have more texture than faces)
+        gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        
+        return green_percentage > 0.3 or laplacian_var > 100  # Adjust thresholds
+    except:
+        return False
+
+# Update predict_disease function
+def predict_disease(image_input, model=None):
+    # First verify it's a plant image
+    if isinstance(image_input, (str, os.PathLike)):
+        img = Image.open(image_input).convert('RGB')
+    else:
+        img = Image.open(image_input).convert('RGB')
+    
+    if not is_plant_image(img):
+        return "Not a plant image", 0.0
+    
+
 def predict_disease(image_path, model=None):
     """Predict plant disease from an image"""
     try:
