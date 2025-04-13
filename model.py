@@ -28,27 +28,34 @@ def load_model():
     if not model_path.exists():
         raise FileNotFoundError(f"Model file not found at {model_path.absolute()}")
     
+    # Verify file is not empty
+    if model_path.stat().st_size == 0:
+        raise ValueError("Model file is empty")
+    
+    logger.info(f"Model file size: {model_path.stat().st_size / (1024*1024):.2f} MB")
+    
     try:
-        # Try TensorFlow loading first
         import tensorflow as tf
-        model = tf.keras.models.load_model(str(model_path))
-        logger.info("Model loaded with TensorFlow successfully")
-        return model
-    except Exception as e1:
-        logger.warning(f"TensorFlow loading failed: {e1}")
+        logger.info(f"TensorFlow version: {tf.__version__}")
+        
+        # Try loading with different options
         try:
-            # Fallback to standalone Keras
-            from keras.models import load_model as keras_load
-            model = keras_load(str(model_path))
-            logger.info("Model loaded with Keras successfully")
+            model = tf.keras.models.load_model(str(model_path))
+            logger.info("Model loaded successfully with default options")
             return model
-        except Exception as e2:
-            logger.error(f"Keras loading failed: {e2}")
-            raise RuntimeError(
-                f"All loading methods failed:\n"
-                f"TensorFlow: {e1}\n"
-                f"Keras: {e2}"
+        except Exception as e:
+            logger.warning(f"Standard load failed, trying with custom objects: {str(e)}")
+            model = tf.keras.models.load_model(
+                str(model_path),
+                compile=False,
+                custom_objects=None
             )
+            logger.info("Model loaded successfully with custom options")
+            return model
+            
+    except Exception as e:
+        logger.error(f"Critical error loading model: {str(e)}")
+        raise RuntimeError(f"Could not load model: {str(e)}")
 
 def is_plant_image(image):
     """Verify image contains plant material"""

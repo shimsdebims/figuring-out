@@ -5,10 +5,7 @@ my_crop_disease_app/
 ├── model.py
 ├── auth.py
 ├── styles.css
-├── assets/
-│   ├── example_healthy.jpg
-│   ├── example_diseased.jpg
-│   ├── example_leaf.jpg
+├── uploads/
 ├── Model/
 │   └── crop_model.h5
 ├── disease_info.json

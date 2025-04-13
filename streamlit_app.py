@@ -91,8 +91,9 @@ if not st.session_state.get('model_loaded'):
     try:
         with st.spinner("🌱 Loading plant disease model..."):
             # Debug info
-            st.info(f"TensorFlow version: {tf.__version__}")
-            st.info(f"Keras version: {tf.keras.__version__}")
+            current_dir = Path(__file__).parent
+            st.info(f"Current directory: {current_dir}")
+            st.info(f"Model path: {current_dir / 'Model' / 'plant_disease_model.h5'}")
             
             # Load model
             st.session_state.model = load_model()
@@ -102,13 +103,11 @@ if not st.session_state.get('model_loaded'):
     except Exception as e:
         st.error(f"❌ Error loading model: {str(e)}")
         
-        # Special handling for common errors
-        if "SavedModel file does not exist" in str(e):
-            st.error("""
-            **Model format issue detected. Possible solutions:**
-            1. The file might be corrupted - try re-uploading
-            2. The model might need to be converted to TensorFlow Lite
-            """)
+        # Show more debug info
+        with st.expander("Technical details"):
+            st.write(f"Python version: {sys.version}")
+            st.write(f"TensorFlow version: {tf.__version__}")
+            st.write(f"Model file size: {os.path.getsize('Model/plant_disease_model.h5') if os.path.exists('Model/plant_disease_model.h5') else 'File not found'}")
         
         st.stop()
 
