@@ -5,9 +5,11 @@ import logging
 import tensorflow as tf
 import cv2
 import json
-from pathlib import Path
 from tensorflow import keras
 import logging
+import h5py
+import tensorflow as tf
+from pathlib import Path
 
 
 
@@ -24,27 +26,39 @@ except Exception as e:
     logger.error(f"Error loading disease info: {str(e)}")
     CLASS_NAMES = ["Healthy"]
 
-def load_model():
-    model_path = Path(__file__).parent / "Model" / "plant_disease_model.h5"
-    
-    # Basic validation
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model file not found at {model_path}")
-    
-    # Try loading with different approaches
+logger = logging.getLogger(__name__)
+
+def verify_model_file():
+    """Check if the model file is valid"""
+    model_path = Path("Model/crop_model.h5")
     try:
-        return tf.keras.models.load_model(model_path)
+        with h5py.File(model_path, 'r') as f:
+            if 'model_weights' in f.keys():  # Check common HDF5 structures
+                return True
+        return False
     except Exception as e:
-        try:
-            return tf.keras.models.load_model(model_path, compile=False)
-        except Exception:
-            raise RuntimeError(
-                f"Failed to load model. Possible causes:\n"
-                f"1. File is corrupted\n"
-                f"2. Saved with different TF version\n"
-                f"3. Not a valid Keras model\n"
-                f"Original error: {str(e)}"
-            )
+        logger.error(f"Model verification failed: {str(e)}")
+        return False
+
+def load_model():
+    model_path = Path("Model/crop_model.h5")
+    
+    # Verify file exists and is valid
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model file missing at {model_path.absolute()}")
+    
+    if not verify_model_file():
+        raise ValueError("Model file exists but is corrupted/invalid")
+    
+    try:
+        # Disable TensorFlow logging
+        tf.get_logger().setLevel('ERROR')
+        model = tf.keras.models.load_model(model_path, compile=False)
+        logger.info("Model loaded successfully")
+        return model
+    except Exception as e:
+        logger.error(f"Failed to load model: {str(e)}")
+        raise RuntimeError(f"Model loading error: {str(e)}")
 
 def is_plant_image(image):
     """Verify image contains plant material"""

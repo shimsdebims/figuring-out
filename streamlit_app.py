@@ -79,6 +79,13 @@ def log_prediction(user_id, image_path, prediction, confidence):
 # Main App
 st.title("🌱 Crop Disease Detection")
 
+model_path = Path("Model/crop_model.h5")
+if not model_path.exists():
+    st.error(f"❌ Model file not found at {model_path}")
+    st.stop()
+
+st.info(f"Model file size: {model_path.stat().st_size / (1024*1024):.2f} MB")
+
 # Try to load model (only once)
 if not st.session_state.get('model_loaded'):
     try:
