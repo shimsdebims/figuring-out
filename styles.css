@@ -1,0 +1,85 @@
+/* Main app styling */
+.stApp {
+    background-color: #2d3436;
+    color: #2d3436;
+}
+
+/* Header styling */
+h1 {
+    color: #27ae60 !important;
+    font-weight: 700 !important;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #27ae60;
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: #2d3436 !important;
+    color: white !important;
+}
+
+[data-testid="stSidebar"] h1 {
+    color: white !important;
+    border-bottom: 2px solid #27ae60;
+}
+
+/* Button styling */
+.stButton>button {
+    background-color: #27ae60 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    border: none !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+}
+
+.stButton>button:hover {
+    background-color: #2ecc71 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+
+/* Tab styling */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 10px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: #dfe6e9 !important;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 10px 20px !important;
+    transition: all 0.3s ease !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #27ae60 !important;
+    color: white !important;
+}
+
+/* Input fields */
+.stTextInput>div>div>input, .stTextInput>div>div>input:focus {
+    border: 1px solid #27ae60 !important;
+    box-shadow: 0 0 0 1px #27ae60 !important;
+}
+
+/* Camera preview */
+[data-testid="stCameraInput"] {
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    border: 2px solid #27ae60 !important;
+}
+
+/* Prediction results */
+.stAlert {
+    border-radius: 8px !important;
+}
+
+/* Disease info cards */
+.disease-card {
+    background-color: rgb(9, 201, 89);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #27ae60;
+}

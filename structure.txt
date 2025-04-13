@@ -1,0 +1,16 @@
+Structure
+my_crop_disease_app/
+├── streamlit_app.py
+├── database.py
+├── model.py
+├── auth.py
+├── styles.css
+├── assets/
+│   ├── example_healthy.jpg
+│   ├── example_diseased.jpg
+│   ├── example_leaf.jpg
+├── Model/
+│   └── crop_model.h5
+├── disease_info.json
+├── requirements.txt
+└── README.md
