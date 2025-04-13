@@ -23,35 +23,29 @@ except Exception as e:
     CLASS_NAMES = ["Healthy"]
 
 def load_model():
-    """More reliable model loading with multiple fallbacks"""
-    model_path = Path(__file__).parent / "Model" / "crop_model.h5"
+    model_path = 'Model/crop_model.h5'
     
     try:
-        # Attempt 1: Standard load
+        # First try standard load
         return tf.keras.models.load_model(model_path)
     except Exception as e1:
         try:
-            # Attempt 2: Load with custom objects
-            return tf.keras.models.load_model(
-                model_path,
-                compile=False,
-                custom_objects=None
-            )
+            # Try loading as weights only
+            model = tf.keras.models.load_model(model_path, compile=False)
+            return model
         except Exception as e2:
             try:
-                # Attempt 3: Load weights only
-                model = create_model_architecture()  # You'd need to define this
+                # Try loading architecture + weights separately
+                model = build_model_architecture()  # Define your model structure
                 model.load_weights(model_path)
                 return model
             except Exception as e3:
                 raise RuntimeError(
-                    f"All loading attempts failed:\n"
+                    f"All loading methods failed:\n"
                     f"1. Standard: {str(e1)}\n"
-                    f"2. With options: {str(e2)}\n"
-                    f"3. Weights only: {str(e3)}"
+                    f"2. Weights Only: {str(e2)}\n"
+                    f"3. Architecture + Weights: {str(e3)}"
                 )
-    except Exception as e:
-        raise RuntimeError(f"Model loading failed: {str(e)}")
 
 def is_plant_image(image):
     """Verify image contains plant material"""

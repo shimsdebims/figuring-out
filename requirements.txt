@@ -10,6 +10,7 @@ tensorflow-cpu>=2.16.1
 streamlit-feedback==0.1.0
 password-strength==0.0.3.post2
 bcrypt==4.1.2
-tensorflow-cpu>=2.16.1
+#tensorflow-cpu>=2.16.1
+tensorflow==2.12.0
 protobuf==3.20.3  # Important for model loading
 
