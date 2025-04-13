@@ -77,31 +77,32 @@ def log_prediction(user_id, image_path, prediction, confidence):
 st.title("🌱 Crop Disease Detection")
 
 # Try to load model (only once)
-if st.session_state.model is None:
+if not st.session_state.get('model_loaded'):
     try:
         with st.spinner("🌱 Loading plant disease model..."):
-            # Add model directory to Python path
-            model_dir = str(Path(__file__).parent / "Model")
-            if model_dir not in sys.path:
-                sys.path.insert(0, model_dir)
-            
             # Debugging info
-            st.info(f"Current directory: {os.getcwd()}")
-            st.info(f"Directory contents: {os.listdir()}")
-            if os.path.exists("Model"):
-                st.info(f"Model directory contents: {os.listdir('Model')}")
+            current_dir = Path(__file__).parent
+            st.info(f"Current directory: {current_dir}")
+            st.info(f"Model path: {current_dir / 'Model' / 'crop_model.h5'}")
             
             # Load model
             st.session_state.model = load_model()
             st.session_state.model_loaded = True
-            logger.info("Model loaded successfully")
+            st.success("Model loaded successfully!")
             
     except Exception as e:
-        st.error(f"❌ Failed to load model: {str(e)}")
-        st.error("Please ensure:")
-        st.error("1. The 'Model' folder exists in the same directory as this app")
-        st.error(f"2. It contains 'crop_model.h5' (current contents: {os.listdir('Model') if os.path.exists('Model') else 'Model folder not found'}")
-        st.error("3. The model file is not corrupted")
+        st.error(f"❌ Critical error loading model: {str(e)}")
+        st.error("Possible solutions:")
+        st.error("1. Verify the model file is not corrupted")
+        st.error("2. Check TensorFlow version compatibility")
+        st.error("3. Try re-uploading the model file")
+        
+        # Show more debug info
+        with st.expander("Technical details"):
+            st.write(f"Python version: {sys.version}")
+            st.write(f"TensorFlow version: {tf.__version__}")
+            st.write(f"Model file size: {os.path.getsize('Model/crop_model.h5')} bytes")
+            
         st.stop()  # Stop the app if model can't load
 
 # Home page (before login)
