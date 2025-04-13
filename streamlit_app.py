@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 import sys
 from pathlib import Path
+import tensorflow as tf
 
 # Local imports
 from auth import register_user, login_user, is_valid_email
@@ -82,19 +83,9 @@ st.title("🌱 Crop Disease Detection")
 if not st.session_state.get('model_loaded'):
     try:
         with st.spinner("🌱 Loading plant disease model..."):
-            # Debugging info - remove after fixing
-            current_dir = Path(__file__).parent
-            model_path = current_dir / "Model" / "crop_model.h5"
-            
-            st.info(f"Current directory: {current_dir}")
-            st.info(f"Model path: {model_path}")
-            st.info(f"File exists: {model_path.exists()}")
-            
-            if model_path.exists():
-                st.info(f"File size: {model_path.stat().st_size} bytes")
-            
-            # Verify TensorFlow version
+            # Debug info
             st.info(f"TensorFlow version: {tf.__version__}")
+            st.info(f"Keras version: {tf.keras.__version__}")
             
             # Load model
             st.session_state.model = load_model()
@@ -102,21 +93,14 @@ if not st.session_state.get('model_loaded'):
             st.success("Model loaded successfully!")
             
     except Exception as e:
-        st.error(f"❌ Critical error loading model: {str(e)}")
+        st.error(f"❌ Error loading model: {str(e)}")
         
-        # More specific error handling
-        if "file signature not found" in str(e):
+        # Special handling for common errors
+        if "SavedModel file does not exist" in str(e):
             st.error("""
-            **The model file is corrupted or incompatible. Please:**
-            1. Verify you have the correct model file
-            2. Check the file size (should be >1MB)
-            3. Re-upload the original model file
-            """)
-        elif "SavedModel file does not exist" in str(e):
-            st.error("""
-            **The model file format is incorrect. Please:**
-            1. Ensure the file is a valid Keras .h5 model
-            2. Re-save the model using `model.save('crop_model.h5')`
+            **Model format issue detected. Possible solutions:**
+            1. The file might be corrupted - try re-uploading
+            2. The model might need to be converted to TensorFlow Lite
             """)
         
         st.stop()
