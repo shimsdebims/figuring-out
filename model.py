@@ -21,43 +21,49 @@ except Exception as e:
     CLASS_NAMES = ["Healthy"]
 
 def load_model():
-    """Simplified model loading with better error handling"""
+    """Robust model loading with multiple fallbacks"""
     try:
-        # Get absolute path to model
         model_path = Path(__file__).parent / "Model" / "crop_model.h5"
-        model_path = model_path.resolve()  # Get absolute path
         
-        logger.info(f"Attempting to load model from: {model_path}")
-        
-        # Verify file exists
+        # Basic validation
         if not model_path.exists():
             raise FileNotFoundError(f"Model file not found at {model_path}")
-            
-        # Verify file is not empty
-        if model_path.stat().st_size == 0:
-            raise ValueError("Model file exists but is empty")
-            
-        # Disable TensorFlow logging
-        tf.get_logger().setLevel('ERROR')
-        tf.autograph.set_verbosity(0)
         
-        # Try loading with different options
+        file_size = model_path.stat().st_size
+        if file_size < 1024:  # Less than 1KB
+            raise ValueError(f"Model file too small ({file_size} bytes), likely corrupted")
+        
+        # First try standard load
         try:
-            model = tf.keras.models.load_model(str(model_path))
-            logger.info("Model loaded successfully with default options")
-            return model
+            return tf.keras.models.load_model(model_path)
         except Exception as e:
-            logger.warning(f"Standard load failed, trying with custom objects: {str(e)}")
-            model = tf.keras.models.load_model(
-                str(model_path),
-                compile=False,
-                custom_objects=None
-            )
-            return model
-            
+            # Try with different options if standard load fails
+            try:
+                return tf.keras.models.load_model(
+                    model_path,
+                    compile=False,
+                    custom_objects=None
+                )
+            except Exception as e2:
+                # Final attempt with experimental features
+                try:
+                    return tf.keras.models.load_model(
+                        model_path,
+                        compile=False,
+                        custom_objects=None,
+                        options=tf.saved_model.LoadOptions(
+                            experimental_io_device='/job:localhost'
+                        )
+                    )
+                except Exception as e3:
+                    raise RuntimeError(
+                        f"All loading attempts failed:\n"
+                        f"1. Standard: {str(e)}\n"
+                        f"2. With options: {str(e2)}\n"
+                        f"3. Experimental: {str(e3)}"
+                    )
     except Exception as e:
-        logger.error(f"Critical error loading model: {str(e)}")
-        raise RuntimeError(f"Could not load model: {str(e)}")
+        raise RuntimeError(f"Model loading failed: {str(e)}")
 
 def is_plant_image(image):
     """Verify image contains plant material"""

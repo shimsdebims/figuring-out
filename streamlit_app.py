@@ -9,6 +9,8 @@ import logging
 from io import BytesIO
 import sys
 from pathlib import Path
+import sys
+from pathlib import Path
 
 # Local imports
 from auth import register_user, login_user, is_valid_email
@@ -80,10 +82,19 @@ st.title("🌱 Crop Disease Detection")
 if not st.session_state.get('model_loaded'):
     try:
         with st.spinner("🌱 Loading plant disease model..."):
-            # Debugging info
+            # Debugging info - remove after fixing
             current_dir = Path(__file__).parent
+            model_path = current_dir / "Model" / "crop_model.h5"
+            
             st.info(f"Current directory: {current_dir}")
-            st.info(f"Model path: {current_dir / 'Model' / 'crop_model.h5'}")
+            st.info(f"Model path: {model_path}")
+            st.info(f"File exists: {model_path.exists()}")
+            
+            if model_path.exists():
+                st.info(f"File size: {model_path.stat().st_size} bytes")
+            
+            # Verify TensorFlow version
+            st.info(f"TensorFlow version: {tf.__version__}")
             
             # Load model
             st.session_state.model = load_model()
@@ -92,18 +103,23 @@ if not st.session_state.get('model_loaded'):
             
     except Exception as e:
         st.error(f"❌ Critical error loading model: {str(e)}")
-        st.error("Possible solutions:")
-        st.error("1. Verify the model file is not corrupted")
-        st.error("2. Check TensorFlow version compatibility")
-        st.error("3. Try re-uploading the model file")
         
-        # Show more debug info
-        with st.expander("Technical details"):
-            st.write(f"Python version: {sys.version}")
-            st.write(f"TensorFlow version: {tf.__version__}")
-            st.write(f"Model file size: {os.path.getsize('Model/crop_model.h5')} bytes")
-            
-        st.stop()  # Stop the app if model can't load
+        # More specific error handling
+        if "file signature not found" in str(e):
+            st.error("""
+            **The model file is corrupted or incompatible. Please:**
+            1. Verify you have the correct model file
+            2. Check the file size (should be >1MB)
+            3. Re-upload the original model file
+            """)
+        elif "SavedModel file does not exist" in str(e):
+            st.error("""
+            **The model file format is incorrect. Please:**
+            1. Ensure the file is a valid Keras .h5 model
+            2. Re-save the model using `model.save('crop_model.h5')`
+            """)
+        
+        st.stop()
 
 # Home page (before login)
 if not st.session_state.logged_in:
