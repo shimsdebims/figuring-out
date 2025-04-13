@@ -41,20 +41,25 @@ def verify_model_file():
         return False
 
 def load_model():
-    model_path = Path("Model/crop_model.h5")
+    model_path = Path("Model/plant_disease_model.h5")
     
-    # Debugging: Print absolute path
-    print("Loading model from:", model_path.absolute())
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model file not found at {model_path.absolute()}")
     
     try:
-        return tf.keras.models.load_model(
-            str(model_path),
-            compile=False,
-            custom_objects=None
-        )
+        # Try loading with Keras 3
+        from keras.models import load_model
+        model = load_model(str(model_path))
+        return model
     except Exception as e:
-        print(f"Failed to load model: {e}")
-        raise
+        print(f"Keras 3 loading failed: {e}")
+        try:
+            # Fallback to TensorFlow Keras
+            from tensorflow.keras.models import load_model
+            model = load_model(str(model_path))
+            return model
+        except Exception as e:
+            raise RuntimeError(f"All loading methods failed: {e}")
 
 def is_plant_image(image):
     """Verify image contains plant material"""
