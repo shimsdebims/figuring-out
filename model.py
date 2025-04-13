@@ -25,7 +25,7 @@ except Exception as e:
     CLASS_NAMES = ["Healthy"]
 
 def load_model():
-    model_path = Path(__file__).parent / "Model" / "crop_model.h5"
+    model_path = Path(__file__).parent / "Model" / "plant_disease_model.h5"
     
     # Basic validation
     if not model_path.exists():
