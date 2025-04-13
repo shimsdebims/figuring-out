@@ -79,7 +79,7 @@ def log_prediction(user_id, image_path, prediction, confidence):
 # Main App
 st.title("🌱 Crop Disease Detection")
 
-model_path = Path("Model/crop_model.h5")
+model_path = Path("Model/plant_disease_model.h5")
 if not model_path.exists():
     st.error(f"❌ Model file not found at {model_path}")
     st.stop()
