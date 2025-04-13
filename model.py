@@ -9,6 +9,8 @@ from pathlib import Path
 from tensorflow import keras
 import logging
 
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,29 +25,26 @@ except Exception as e:
     CLASS_NAMES = ["Healthy"]
 
 def load_model():
-    model_path = 'Model/crop_model.h5'
+    model_path = Path(__file__).parent / "Model" / "crop_model.h5"
     
+    # Basic validation
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model file not found at {model_path}")
+    
+    # Try loading with different approaches
     try:
-        # First try standard load
         return tf.keras.models.load_model(model_path)
-    except Exception as e1:
+    except Exception as e:
         try:
-            # Try loading as weights only
-            model = tf.keras.models.load_model(model_path, compile=False)
-            return model
-        except Exception as e2:
-            try:
-                # Try loading architecture + weights separately
-                model = build_model_architecture()  # Define your model structure
-                model.load_weights(model_path)
-                return model
-            except Exception as e3:
-                raise RuntimeError(
-                    f"All loading methods failed:\n"
-                    f"1. Standard: {str(e1)}\n"
-                    f"2. Weights Only: {str(e2)}\n"
-                    f"3. Architecture + Weights: {str(e3)}"
-                )
+            return tf.keras.models.load_model(model_path, compile=False)
+        except Exception:
+            raise RuntimeError(
+                f"Failed to load model. Possible causes:\n"
+                f"1. File is corrupted\n"
+                f"2. Saved with different TF version\n"
+                f"3. Not a valid Keras model\n"
+                f"Original error: {str(e)}"
+            )
 
 def is_plant_image(image):
     """Verify image contains plant material"""
