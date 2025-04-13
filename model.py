@@ -5,8 +5,7 @@ import logging
 from pathlib import Path
 import h5py
 import json
-import opencv 
-from opencv import cv2
+import cv2
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,22 +29,26 @@ def load_model():
         raise FileNotFoundError(f"Model file not found at {model_path.absolute()}")
     
     try:
-        # Try with Keras 3 first
-        from keras.models import load_model as keras_load
-        model = keras_load(str(model_path))
-        logger.info("Model loaded successfully with Keras 3")
+        # Try TensorFlow loading first
+        import tensorflow as tf
+        model = tf.keras.models.load_model(str(model_path))
+        logger.info("Model loaded with TensorFlow successfully")
         return model
     except Exception as e1:
-        logger.warning(f"Keras 3 loading failed: {e1}")
+        logger.warning(f"TensorFlow loading failed: {e1}")
         try:
-            # Fallback to TensorFlow Keras
-            from tensorflow.keras.models import load_model as tf_load
-            model = tf_load(str(model_path))
-            logger.info("Model loaded successfully with TensorFlow Keras")
+            # Fallback to standalone Keras
+            from keras.models import load_model as keras_load
+            model = keras_load(str(model_path))
+            logger.info("Model loaded with Keras successfully")
             return model
         except Exception as e2:
-            logger.error(f"TensorFlow Keras loading failed: {e2}")
-            raise RuntimeError(f"All loading methods failed:\nKeras 3: {e1}\nTF Keras: {e2}")
+            logger.error(f"Keras loading failed: {e2}")
+            raise RuntimeError(
+                f"All loading methods failed:\n"
+                f"TensorFlow: {e1}\n"
+                f"Keras: {e2}"
+            )
 
 def is_plant_image(image):
     """Verify image contains plant material"""
