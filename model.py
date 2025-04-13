@@ -29,99 +29,60 @@ else:
         disease_info = {"Healthy": {"symptoms": "None", "treatment": "None", "fun_fact": "Healthy plants are happy plants!"}}
         CLASS_NAMES = ["Healthy"]
 
-# def load_model():
-#     """Load model using absolute path"""
-#     # Get the directory where model.py is located
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-    
-#     # Build absolute path to the model
-#     model_path = os.path.join(current_dir, "Models", "crop_model.h5")
-    
-#     logger.info(f"Attempting to load model from: {model_path}")
-    
-#     if os.path.exists(model_path):
-#         try:
-#             # Disable TensorFlow logging
-#             tf.get_logger().setLevel('ERROR')
-#             tf.autograph.set_verbosity(0)
-            
-#             model = tf.keras.models.load_model(model_path, compile=False)
-#             logger.info(f"Successfully loaded model from {model_path}")
-#             return model
-#         except Exception as e:
-#             logger.error(f"Failed to load model from {model_path}: {str(e)}")
-#             raise
-#     else:
-#         logger.error(f"Model file not found at: {model_path}")
-#         raise FileNotFoundError(f"Model file not found at: {model_path}. Please check that this path is correct.")
-
-def find_model_file():
-    """Search for the model file in various possible locations"""
-    # Start with likely locations
-    possible_paths = [
-        "Model/crop_model.h5",               # Primary location (note uppercase M)
-        "model/crop_model.h5",               # Lowercase alternative
-        "crop_model.h5",                     # Current directory
-        "../Model/crop_model.h5",            # Parent directory
-        "../crop_model.h5",                  # Parent directory root
-    ]
-    
-    # Log where we're looking
-    current_dir = os.getcwd()
-    logger.info(f"Current working directory: {current_dir}")
-    logger.info(f"Directory contents: {os.listdir()}")
-    if os.path.exists("Model"):
-        logger.info(f"Model directory contents: {os.listdir('Model')}")
-    
-    # Check each path
-    for path in possible_paths:
-        full_path = os.path.abspath(path)
-        if os.path.exists(full_path):
-            logger.info(f"Found model at: {full_path}")
-            return full_path
-        else:
-            logger.info(f"Model not found at: {full_path}")
-    
-    # If we've searched all paths and found nothing
-    logger.error("Could not find model file in any expected location")
-    return None
-    
-    # As a fallback, search recursively from current directory
-    logger.info("Performing recursive search for model file...")
-    for root, dirs, files in os.walk("."):
-        if "crop_model.h5" in files:
-            path = os.path.join(root, "crop_model.h5")
-            logger.info(f"Found model at: {path}")
-            return path
-    
-    return None
-
 def load_model():
-    """Load model with comprehensive search"""
-    model_path = find_model_file()
+    """Load model with comprehensive error handling"""
+    model_path = "Model/crop_model.h5"
     
-    if model_path:
+    # Get absolute path and verify existence
+    abs_path = os.path.abspath(model_path)
+    logger.info(f"Looking for model at: {abs_path}")
+    
+    if not os.path.exists(abs_path):
+        # Try alternative paths if primary doesn't exist
+        alternative_paths = [
+            os.path.join(os.path.dirname(__file__), "Model/crop_model.h5"),
+            os.path.join(os.getcwd(), "Model/crop_model.h5"),
+            "crop_model.h5",
+            "../Model/crop_model.h5"
+        ]
+        
+        for path in alternative_paths:
+            abs_path = os.path.abspath(path)
+            logger.info(f"Trying alternative path: {abs_path}")
+            if os.path.exists(abs_path):
+                model_path = abs_path
+                break
+        else:
+            raise FileNotFoundError(
+                f"Could not find model file. Checked paths:\n"
+                f"- {os.path.abspath('Model/crop_model.h5')}\n"
+                f"- {os.path.join(os.path.dirname(__file__), 'Model/crop_model.h5')}\n"
+                f"- {os.path.join(os.getcwd(), 'Model/crop_model.h5')}\n"
+                f"Current directory contents: {os.listdir()}"
+            )
+    
+    try:
+        # Disable TensorFlow logging
+        tf.get_logger().setLevel('ERROR')
+        tf.autograph.set_verbosity(0)
+        
+        logger.info(f"Attempting to load model from: {model_path}")
+        model = tf.keras.models.load_model(model_path, compile=False)
+        logger.info("Model loaded successfully")
+        return model
+    except Exception as e:
+        logger.error(f"Failed to load model: {str(e)}")
+        # Try loading with custom objects if needed
         try:
-            # Disable TensorFlow logging
-            tf.get_logger().setLevel('ERROR')
-            tf.autograph.set_verbosity(0)
-            
-            model = tf.keras.models.load_model(model_path, compile=False)
-            logger.info(f"Successfully loaded model from {model_path}")
+            model = tf.keras.models.load_model(
+                model_path,
+                compile=False,
+                custom_objects=None
+            )
             return model
-        except Exception as e:
-            logger.error(f"Failed to load model from {model_path}: {str(e)}")
-            raise
-    else:
-        # If we can't find the model file, we have two options:
-        # 1. Create a fallback dummy model for testing purposes
-        # 2. Raise an error to alert the user
-        
-        # For option 1 (dummy model for testing):
-        # return create_dummy_model()
-        
-        # For option 2 (raise error):
-        raise FileNotFoundError("Could not find model file. Please upload model file to the correct location.")
+        except Exception as e2:
+            logger.error(f"Failed with custom objects: {str(e2)}")
+            raise RuntimeError(f"Could not load model: {str(e2)}")
 
 def is_plant_image(image):
     """Verify image contains plant material"""
@@ -147,7 +108,10 @@ def is_plant_image(image):
 def predict_disease(image_input):
     """Make prediction with the loaded model"""
     try:
-        model = load_model()
+        # Load model (cached in session state)
+        if 'model' not in st.session_state:
+            st.session_state.model = load_model()
+        model = st.session_state.model
         
         # Open image
         if isinstance(image_input, (str, os.PathLike)):
@@ -171,4 +135,4 @@ def predict_disease(image_input):
         return disease, confidence
     except Exception as e:
         logger.error(f"Prediction failed: {str(e)}")
-        raise
+        raise RuntimeError(f"Prediction error: {str(e)}")

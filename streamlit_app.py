@@ -7,6 +7,8 @@ import json
 import time
 import logging
 from io import BytesIO
+import sys
+from pathlib import Path
 
 # Local imports
 from auth import register_user, login_user, is_valid_email
@@ -78,14 +80,29 @@ st.title("🌱 Crop Disease Detection")
 if st.session_state.model is None:
     try:
         with st.spinner("🌱 Loading plant disease model..."):
+            # Add model directory to Python path
+            model_dir = str(Path(__file__).parent / "Model")
+            if model_dir not in sys.path:
+                sys.path.insert(0, model_dir)
+            
+            # Debugging info
+            st.info(f"Current directory: {os.getcwd()}")
+            st.info(f"Directory contents: {os.listdir()}")
+            if os.path.exists("Model"):
+                st.info(f"Model directory contents: {os.listdir('Model')}")
+            
+            # Load model
             st.session_state.model = load_model()
             st.session_state.model_loaded = True
             logger.info("Model loaded successfully")
+            
     except Exception as e:
         st.error(f"❌ Failed to load model: {str(e)}")
-        st.warning("The app will continue loading, but image detection will not work.")
-        # Don't stop the app entirely - we'll just disable detection functionality
-        st.session_state.model_loaded = False
+        st.error("Please ensure:")
+        st.error("1. The 'Model' folder exists in the same directory as this app")
+        st.error(f"2. It contains 'crop_model.h5' (current contents: {os.listdir('Model') if os.path.exists('Model') else 'Model folder not found'}")
+        st.error("3. The model file is not corrupted")
+        st.stop()  # Stop the app if model can't load
 
 # Home page (before login)
 if not st.session_state.logged_in:
