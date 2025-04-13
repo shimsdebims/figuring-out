@@ -59,31 +59,32 @@ def find_model_file():
     """Search for the model file in various possible locations"""
     # Start with likely locations
     possible_paths = [
-        "crop_model.h5",                      # Current directory
-        "Model/crop_model.h5",               # Models subdirectory
-        "Model/crop_model.h5",                # Model subdirectory
+        "Model/crop_model.h5",               # Primary location (note uppercase M)
+        "model/crop_model.h5",               # Lowercase alternative
+        "crop_model.h5",                     # Current directory
         "../Model/crop_model.h5",            # Parent directory
-        "../crop_model.h5",                   # Parent directory root
-        "/mount/src/crop_model.h5",           # Container mount paths
-        "/mount/src/Model/crop_model.h5",
-        "/mount/src/figuring-out/crop_model.h5",
-        "/mount/src/figuring-out/Model/crop_model.h5"
+        "../crop_model.h5",                  # Parent directory root
     ]
     
     # Log where we're looking
     current_dir = os.getcwd()
     logger.info(f"Current working directory: {current_dir}")
+    logger.info(f"Directory contents: {os.listdir()}")
+    if os.path.exists("Model"):
+        logger.info(f"Model directory contents: {os.listdir('Model')}")
     
     # Check each path
     for path in possible_paths:
-        if os.path.exists(path):
-            logger.info(f"Found model at: {path}")
-            return path
+        full_path = os.path.abspath(path)
+        if os.path.exists(full_path):
+            logger.info(f"Found model at: {full_path}")
+            return full_path
         else:
-            logger.debug(f"Model not found at: {path}")
+            logger.info(f"Model not found at: {full_path}")
     
     # If we've searched all paths and found nothing
     logger.error("Could not find model file in any expected location")
+    return None
     
     # As a fallback, search recursively from current directory
     logger.info("Performing recursive search for model file...")
