@@ -43,22 +43,18 @@ def verify_model_file():
 def load_model():
     model_path = Path("Model/crop_model.h5")
     
-    # Verify file exists and is valid
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model file missing at {model_path.absolute()}")
-    
-    if not verify_model_file():
-        raise ValueError("Model file exists but is corrupted/invalid")
+    # Debugging: Print absolute path
+    print("Loading model from:", model_path.absolute())
     
     try:
-        # Disable TensorFlow logging
-        tf.get_logger().setLevel('ERROR')
-        model = tf.keras.models.load_model(model_path, compile=False)
-        logger.info("Model loaded successfully")
-        return model
+        return tf.keras.models.load_model(
+            str(model_path),
+            compile=False,
+            custom_objects=None
+        )
     except Exception as e:
-        logger.error(f"Failed to load model: {str(e)}")
-        raise RuntimeError(f"Model loading error: {str(e)}")
+        print(f"Failed to load model: {e}")
+        raise
 
 def is_plant_image(image):
     """Verify image contains plant material"""
