@@ -17,6 +17,7 @@ import os
 os.environ["STREAMLIT_DISABLE_DEPENDENCY_CHECK"] = "1"
 sys.modules["streamlit"].__version__ = "1.44.1"  # Force version recognition
 
+
 # Local imports
 from auth import register_user, login_user, is_valid_email
 from database import initialize_db, insert_upload, get_user_uploads, insert_feedback
