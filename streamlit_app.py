@@ -15,7 +15,7 @@ import tensorflow as tf
 import os
 import os
 os.environ["STREAMLIT_DISABLE_DEPENDENCY_CHECK"] = "1"
-os.environ["STREAMLIT_VERSION"] = "1.44.1"  # Force version recognition
+sys.modules["streamlit"].__version__ = "1.44.1"  # Force version recognition
 
 # Local imports
 from auth import register_user, login_user, is_valid_email
