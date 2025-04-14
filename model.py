@@ -6,6 +6,8 @@ from pathlib import Path
 import h5py
 import json
 import cv2
+import streamlit as st
+import tensorflow as tf 
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -86,7 +88,10 @@ def predict_disease(image_input):
         img_array = np.expand_dims(img_array, axis=0)
         
         # Get model
-        if 'model' not in st.session_state:
+        import tensorflow as tf
+        
+        # Load model if not in session state
+        if not hasattr(st.session_state, 'model') or st.session_state.model is None:
             st.session_state.model = load_model()
         model = st.session_state.model
         
