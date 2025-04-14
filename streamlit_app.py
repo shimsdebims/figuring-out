@@ -14,7 +14,7 @@ from pathlib import Path
 import tensorflow as tf
 import os
 import os
-os.environ["STREAMLIT_DISABLE_DEPENDENCY_CHECK"] = "true"
+os.environ["STREAMLIT_DISABLE_DEPENDENCY_CHECK"] = "1"
 os.environ["STREAMLIT_VERSION"] = "1.44.1"  # Force version recognition
 
 # Local imports
