@@ -23,42 +23,62 @@ except Exception as e:
     logger.error(f"Error loading disease info: {str(e)}")
     CLASS_NAMES = ["Healthy"]
 
-def load_model():
-    model_path = Path("Model/plant_disease_model.h5")
+# def load_model():
+#     model_path = Path("Model/plant_disease_model.h5")
     
-    # Verify file exists
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model file not found at {model_path.absolute()}")
+#     # Verify file exists
+#     if not model_path.exists():
+#         raise FileNotFoundError(f"Model file not found at {model_path.absolute()}")
     
-    # Verify file is not empty
-    if model_path.stat().st_size == 0:
-        raise ValueError("Model file is empty")
+#     # Verify file is not empty
+#     if model_path.stat().st_size == 0:
+#         raise ValueError("Model file is empty")
     
-    logger.info(f"Model file size: {model_path.stat().st_size / (1024*1024):.2f} MB")
+#     logger.info(f"Model file size: {model_path.stat().st_size / (1024*1024):.2f} MB")
     
-    try:
-        import tensorflow as tf
-        logger.info(f"TensorFlow version: {tf.__version__}")
+#     try:
+#         import tensorflow as tf
+#         logger.info(f"TensorFlow version: {tf.__version__}")
         
-        # Try loading with different options
-        try:
-            model = tf.keras.models.load_model(str(model_path))
-            logger.info("Model loaded successfully with default options")
-            return model
-        except Exception as e:
-            logger.warning(f"Standard load failed, trying with custom objects: {str(e)}")
-            model = tf.keras.models.load_model(
-                str(model_path),
-                compile=False,
-                custom_objects=None
-            )
-            logger.info("Model loaded successfully with custom options")
-            return model
+#         # Try loading with different options
+#         try:
+#             model = tf.keras.models.load_model(str(model_path))
+#             logger.info("Model loaded successfully with default options")
+#             return model
+#         except Exception as e:
+#             logger.warning(f"Standard load failed, trying with custom objects: {str(e)}")
+#             model = tf.keras.models.load_model(
+#                 str(model_path),
+#                 compile=False,
+#                 custom_objects=None
+#             )
+#             logger.info("Model loaded successfully with custom options")
+#             return model
             
-    except Exception as e:
-        logger.error(f"Critical error loading model: {str(e)}")
-        raise RuntimeError(f"Could not load model: {str(e)}")
+#     except Exception as e:
+#         logger.error(f"Critical error loading model: {str(e)}")
+#         raise RuntimeError(f"Could not load model: {str(e)}")
 
+def load_model():
+    try:
+        # First try loading the real model
+        import tensorflow as tf
+        model = tf.keras.models.load_model('Model/crop_model.h5')
+        logger.info("✅ Real model loaded successfully!")
+        return model
+        
+    except Exception as e:
+        logger.error(f"❌ Real model failed to load: {str(e)}")
+        logger.warning("⚠️ Falling back to temporary mock model")
+        
+        # Create a simple mock model
+        class MockModel:
+            def predict(self, x):
+                # Return random probabilities for each class
+                return np.random.uniform(0, 1, size=(1, len(CLASS_NAMES)))
+        
+        return MockModel()
+    
 def is_plant_image(image):
     """Verify image contains plant material"""
     try:
@@ -108,18 +128,27 @@ def is_plant_image(image):
     
 
 def predict_disease(image_input):
-    """Make prediction with the loaded model (temporary mock for presentation)"""
     try:
-        # Open image just to check it's valid
         img = Image.open(image_input).convert('RGB')
+        img = img.resize((224, 224))
+        img_array = np.array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
         
-        # Mock prediction - replace with your model's classes as needed
-        import random
-        diseases = ["Tomato - Healthy", "Tomato - Leaf Mold", "Potato - Late Blight"]
-        disease = random.choice(diseases)
-        confidence = random.uniform(0.75, 0.98)
+        model = st.session_state.model
         
+        predictions = model.predict(img_array, verbose=0)[0]
+        predicted_idx = np.argmax(predictions)
+        confidence = float(predictions[predicted_idx])
+        
+        # If using mock model, show placeholder text
+        if isinstance(model, MockModel):
+            disease = "[MOCK] " + CLASS_NAMES[predicted_idx] if predicted_idx < len(CLASS_NAMES) else "Unknown"
+            confidence = min(confidence, 0.95)  # Cap mock confidence at 95%
+        else:
+            disease = CLASS_NAMES[predicted_idx] if predicted_idx < len(CLASS_NAMES) else "Unknown"
+            
         return disease, confidence
+        
     except Exception as e:
         logger.error(f"Prediction failed: {str(e)}")
         return "Error", 0.0

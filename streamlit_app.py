@@ -12,6 +12,8 @@ from pathlib import Path
 import sys
 from pathlib import Path
 import tensorflow as tf
+import os
+os.environ["STREAMLIT_DISABLE_DEPENDENCY_CHECK"] = "true"
 
 # Local imports
 from auth import register_user, login_user, is_valid_email
