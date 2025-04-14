@@ -76,30 +76,48 @@ def is_plant_image(image):
         logger.warning(f"Plant verification failed: {str(e)}")
         return False
 
+# def predict_disease(image_input):
+#     """Make prediction with the loaded model"""
+#     try:
+#         # Open image
+#         img = Image.open(image_input).convert('RGB')
+        
+#         # Preprocess
+#         img = img.resize((224, 224))
+#         img_array = np.array(img) / 255.0
+#         img_array = np.expand_dims(img_array, axis=0)
+        
+#         # Get model
+#         import tensorflow as tf
+        
+#         # Load model if not in session state
+#         if not hasattr(st.session_state, 'model') or st.session_state.model is None:
+#             st.session_state.model = load_model()
+#         model = st.session_state.model
+        
+#         # Predict
+#         predictions = model.predict(img_array, verbose=0)[0]
+#         predicted_idx = np.argmax(predictions)
+#         confidence = float(predictions[predicted_idx])
+#         disease = CLASS_NAMES[predicted_idx] if predicted_idx < len(CLASS_NAMES) else "Unknown"
+        
+#         return disease, confidence
+#     except Exception as e:
+#         logger.error(f"Prediction failed: {str(e)}")
+#         return "Error", 0.0
+    
+
 def predict_disease(image_input):
-    """Make prediction with the loaded model"""
+    """Make prediction with the loaded model (temporary mock for presentation)"""
     try:
-        # Open image
+        # Open image just to check it's valid
         img = Image.open(image_input).convert('RGB')
         
-        # Preprocess
-        img = img.resize((224, 224))
-        img_array = np.array(img) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
-        
-        # Get model
-        import tensorflow as tf
-        
-        # Load model if not in session state
-        if not hasattr(st.session_state, 'model') or st.session_state.model is None:
-            st.session_state.model = load_model()
-        model = st.session_state.model
-        
-        # Predict
-        predictions = model.predict(img_array, verbose=0)[0]
-        predicted_idx = np.argmax(predictions)
-        confidence = float(predictions[predicted_idx])
-        disease = CLASS_NAMES[predicted_idx] if predicted_idx < len(CLASS_NAMES) else "Unknown"
+        # Mock prediction - replace with your model's classes as needed
+        import random
+        diseases = ["Tomato - Healthy", "Tomato - Leaf Mold", "Potato - Late Blight"]
+        disease = random.choice(diseases)
+        confidence = random.uniform(0.75, 0.98)
         
         return disease, confidence
     except Exception as e:
