@@ -1,212 +1,96 @@
-/* Main dark theme styling */
-.stApp {
-    background-color: #1A1D21;
-    color: #E6EDF3;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
+/* 
+ * Dark Theme CSS for Crop Disease Detection App
+ * Inspired by MongoDB Atlas with plant-themed elements
+ * Fixes contrast issues and adds visual enhancements
+ */
 
-/* Leaf icon in the title */
-.stApp h1::before {
-    content: "🍃";
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-/* Headers with gradient text */
-h1, h2, h3, h4, h5, h6 {
-    color: #E6EDF3 !important;
-    font-weight: 600 !important;
-}
-
-h1 {
-    background: linear-gradient(90deg, #10B981, #3B82F6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    border-bottom: 1px solid #2D3747;
-    padding-bottom: 12px;
-    margin-bottom: 1.5rem !important;
-}
-
-/* Sidebar - dark with accent border */
-[data-testid="stSidebar"] {
-    background-color: #161A22 !important;
-    border-right: 1px solid #2D3747 !important;
-    color: #E6EDF3 !important;
-}
-
-[data-testid="stSidebar"] h1 {
-    background: none;
-    -webkit-text-fill-color: #E6EDF3;
-    border-bottom: 1px solid #2D3747;
-}
-
-/* Buttons - modern gradient */
-.stButton>button {
-    background: linear-gradient(90deg, #10B981, #3B82F6) !important;
-    color: white !important;
-    border-radius: 6px !important;
-    border: none !important;
-    font-weight: 500 !important;
-    padding: 0.5rem 1.25rem !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-}
-
-.stButton>button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
-    opacity: 0.9;
-}
-
-/* Tabs - sleek dark style */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 4px;
-    margin-bottom: 1.5rem;
-    background-color: #1E2229;
-    border-radius: 8px;
-    padding: 4px;
-}
-
-.stTabs [data-baseweb="tab"] {
-    background-color: transparent !important;
-    border-radius: 6px !important;
-    padding: 0.5rem 1rem !important;
-    color: #94A3B8 !important;
-    font-weight: 500;
-    margin: 0 !important;
-}
-
-.stTabs [aria-selected="true"] {
-    background-color: #2D3747 !important;
-    color: #E6EDF3 !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
-}
-
-/* Input fields - dark theme */
-.stTextInput>div>div>input, 
-.stTextInput>div>div>input:focus,
-.stTextArea>div>div>textarea,
-.stTextArea>div>div>textarea:focus {
-    background-color: #1E2229 !important;
-    border: 1px solid #2D3747 !important;
-    border-radius: 6px !important;
-    color: #E6EDF3 !important;
-    padding: 0.5rem 0.75rem !important;
-}
-
-.stTextInput>div>div>input:focus, 
-.stTextArea>div>div>textarea:focus {
-    border-color: #3B82F6 !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-}
-
-/* File uploader - dark style */
-.stFileUploader>div>div {
-    background-color: #1E2229 !important;
-    border: 2px dashed #2D3747 !important;
-    border-radius: 8px !important;
-    color: #94A3B8;
-}
-
-.stFileUploader>div>div:hover {
-    border-color: #10B981 !important;
-}
-
-/* Camera preview */
-[data-testid="stCameraInput"] {
-    border-radius: 8px !important;
-    border: 1px solid #2D3747 !important;
-    background-color: #1E2229;
-}
-
-/* Cards - dark with accent border */
-.disease-card {
-    background-color: #1E2229;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin: 1rem 0;
-    border-left: 4px solid #10B981;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.disease-card h3 {
-    color: #E6EDF3 !important;
-    margin-top: 0 !important;
-    display: flex;
-    align-items: center;
-}
-
-.disease-card h3::before {
-    content: "🌿";
-    margin-right: 8px;
-}
-
-.disease-card p {
-    color: #94A3B8;
-    line-height: 1.6;
-}
-
-/* Alerts - dark version */
-.stAlert {
-    background-color: #1E2229 !important;
-    border-radius: 8px !important;
-    border-left: 4px solid;
-}
-
-.stSuccess {
-    border-left-color: #10B981 !important;
-    color: #E6EDF3 !important;
-}
-
-.stError {
-    border-left-color: #EF4444 !important;
-    color: #E6EDF3 !important;
-}
-
-.stInfo {
-    border-left-color: #3B82F6 !important;
-    color: #E6EDF3 !important;
-}
-
-/* Expanders - dark style */
-[data-testid="stExpander"] {
-    background-color: #1E2229 !important;
-    border-radius: 8px !important;
-    border: 1px solid #2D3747 !important;
-}
-
-/* Metrics - dark cards */
-.stMetric {
-    background-color: #1E2229;
-    border-radius: 8px;
-    padding: 1rem;
-    border-left: 4px solid #3B82F6;
-}
-
-/* Radio buttons - dark theme */
-.stRadio>div {
-    background-color: #1E2229 !important;
-    border-radius: 8px !important;
-    border: 1px solid #2D3747 !important;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #1E2229;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #2D3747;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #3B82F6;
-}
-
-/* Leaf icon for the browser tab */
+/* Base Styles */
+:root {
+    --primary-bg: #1A1D21;
+    --secondary-bg: #1E2229;
+    --accent-border: #2D3747;
+    --primary-text: #E6EDF3;
+    --secondary-text: #94A3B8;
+    --success: #10B981;
+    --info: #3B82F6;
+    --error: #EF4444;
+  }
+  
+  /* Main App Container */
+  .stApp {
+      background-color: var(--primary-bg);
+      color: var(--primary-text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+  }
+  
+  /* Leaf Icon in Title */
+  .stApp h1::before {
+      content: "🍃";
+      margin-right: 10px;
+      vertical-align: middle;
+  }
+  
+  /* Headers with Gradient Text */
+  h1, h2, h3 {
+      color: var(--primary-text) !important;
+      font-weight: 600 !important;
+  }
+  
+  h1 {
+      background: linear-gradient(90deg, var(--success), var(--info));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      border-bottom: 1px solid var(--accent-border);
+      padding-bottom: 12px;
+  }
+  
+  /* Sidebar Styles */
+  [data-testid="stSidebar"] {
+      background-color: #161A22 !important;
+      border-right: 1px solid var(--accent-border) !important;
+  }
+  
+  /* Button Styles */
+  .stButton>button {
+      background: linear-gradient(90deg, var(--success), var(--info)) !important;
+      color: white !important;
+      border-radius: 6px !important;
+      transition: all 0.2s ease !important;
+  }
+  
+  /* Metric/Accuracy Display Fix */
+  .stMetric {
+      background-color: var(--secondary-bg) !important;
+      border-left: 4px solid var(--info) !important;
+      color: var(--primary-text) !important;
+  }
+  
+  /* Image Display Fix */
+  .stImage>img {
+      border-radius: 8px;
+      border: 1px solid var(--accent-border);
+  }
+  
+  /* Disease Cards */
+  .disease-card {
+      background-color: var(--secondary-bg);
+      border-left: 4px solid var(--success);
+  }
+  
+  /* Alert Messages */
+  .stAlert {
+      background-color: var(--secondary-bg) !important;
+      border-left: 4px solid;
+  }
+  
+  /* Input Fields */
+  .stTextInput>div>div>input {
+      background-color: var(--secondary-bg) !important;
+      color: var(--primary-text) !important;
+  }
+  
+  /* Tab Styling */
+  .stTabs [aria-selected="true"] {
+      background-color: var(--secondary-bg) !important;
+  }
