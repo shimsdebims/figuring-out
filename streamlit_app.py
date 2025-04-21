@@ -41,9 +41,9 @@ else:
     logger.warning("styles.css not found - app will use default styling")
 
 # Check if necessary directories exist
-if not os.path.exists("assets"):
-    os.makedirs("assets", exist_ok=True)
-    logger.warning("assets directory created - example images may not be available")
+if not os.path.exists("aAssets"):
+    os.makedirs("Assets", exist_ok=True)
+    logger.warning("Assets directory created - example images may not be available")
 
 # Initialize database
 initialize_db()
@@ -94,19 +94,19 @@ if not model_path.exists():
 
 st.info(f"Model file size: {model_path.stat().st_size / (1024*1024):.2f} MB")
 
-# Try to load model (only once)
+# load model (only once)
 if not st.session_state.get('model_loaded'):
     try:
         with st.spinner("🌱 Loading plant disease model..."):
             # Debug info
             current_dir = Path(__file__).parent
-            st.info(f"Current directory: {current_dir}")
-            st.info(f"Model path: {current_dir / 'Model' / 'plant_disease_model.h5'}")
+            # st.info(f"Current directory: {current_dir}")
+            # st.info(f"Model path: {current_dir / 'Model' / 'plant_disease_model.h5'}")
             
             # Load model
             st.session_state.model = load_model()
             st.session_state.model_loaded = True
-            st.success("Model loaded successfully!")
+            # st.success("Model loaded successfully!")
             
     except Exception as e:
         st.error(f"❌ Error loading model: {str(e)}")
@@ -115,7 +115,7 @@ if not st.session_state.get('model_loaded'):
         with st.expander("Technical details"):
             st.write(f"Python version: {sys.version}")
             st.write(f"TensorFlow version: {tf.__version__}")
-            st.write(f"Model file size: {os.path.getsize('Model/plant_disease_model.h5') if os.path.exists('Model/plant_disease_model.h5') else 'File not found'}")
+            # st.write(f"Model file size: {os.path.getsize('Model/plant_disease_model.h5') if os.path.exists('Model/plant_disease_model.h5') else 'File not found'}")
         
         st.stop()
 
@@ -130,9 +130,9 @@ if not st.session_state.logged_in:
     st.subheader("📸 Example Images")
     col1, col2, col3 = st.columns(3)
     example_paths = {
-        "assets/example_healthy.jpg": "Healthy Tomato Leaf",
-        "assets/example_diseased.jpg": "Diseased Potato Leaf",
-        "assets/example_leaf.jpg": "Proper Leaf Close-up"
+        "Assets/CornCommonRust(3279).JPG": "Common Rust in Corn",
+        "Assets/PotatoHealthy(2161).JPG": "Healthy Potato leaf",
+        "Assets/TomatoSeptoriaLeafSpot(3628).JPG": "Tomato Septoria Leaf Spot"
     }
     
     columns = [col1, col2, col3]
