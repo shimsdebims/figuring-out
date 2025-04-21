@@ -1,6 +1,6 @@
 /* Main app styling */
 .stApp {
-    background-color: #f8f9fa;
+    background-color: #333;
     color: #333;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -19,7 +19,7 @@ h1 {
 
 /* Sidebar styling */
 [data-testid="stSidebar"] {
-    background-color: #2c7873 !important;
+    background-color: #146c47 !important;
     color: white !important;
     padding: 1.5rem !important;
 }
