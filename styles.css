@@ -1,10 +1,4 @@
-/* 
- * Dark Theme CSS for Crop Disease Detection App
- * Inspired by MongoDB Atlas with plant-themed elements
- * Fixes contrast issues and adds visual enhancements
- */
-
-/* Base Styles */
+/* Main dark theme with MongoDB Atlas inspiration */
 :root {
     --primary-bg: #1A1D21;
     --secondary-bg: #1E2229;
@@ -13,84 +7,47 @@
     --secondary-text: #94A3B8;
     --success: #10B981;
     --info: #3B82F6;
-    --error: #EF4444;
   }
   
-  /* Main App Container */
+  /* Base app styling */
   .stApp {
       background-color: var(--primary-bg);
       color: var(--primary-text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
   }
   
-  /* Leaf Icon in Title */
+  /* Leaf icon in title */
   .stApp h1::before {
       content: "🍃";
       margin-right: 10px;
-      vertical-align: middle;
   }
   
-  /* Headers with Gradient Text */
-  h1, h2, h3 {
-      color: var(--primary-text) !important;
-      font-weight: 600 !important;
-  }
-  
-  h1 {
-      background: linear-gradient(90deg, var(--success), var(--info));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      border-bottom: 1px solid var(--accent-border);
-      padding-bottom: 12px;
-  }
-  
-  /* Sidebar Styles */
-  [data-testid="stSidebar"] {
-      background-color: #161A22 !important;
-      border-right: 1px solid var(--accent-border) !important;
-  }
-  
-  /* Button Styles */
-  .stButton>button {
-      background: linear-gradient(90deg, var(--success), var(--info)) !important;
-      color: white !important;
-      border-radius: 6px !important;
-      transition: all 0.2s ease !important;
-  }
-  
-  /* Metric/Accuracy Display Fix */
+  /* Fixed accuracy meter display */
   .stMetric {
       background-color: var(--secondary-bg) !important;
-      border-left: 4px solid var(--info) !important;
+      border-left: 4px solid var(--success) !important;
       color: var(--primary-text) !important;
+      padding: 1rem !important;
+      border-radius: 8px !important;
   }
   
-  /* Image Display Fix */
-  .stImage>img {
-      border-radius: 8px;
-      border: 1px solid var(--accent-border);
+  /* Fixed image container warnings */
+  .stImage>img, [data-testid="stImage"]>img {
+      max-width: 100% !important;
+      height: auto !important;
   }
   
-  /* Disease Cards */
+  /* Improved cards */
   .disease-card {
       background-color: var(--secondary-bg);
       border-left: 4px solid var(--success);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
   }
   
-  /* Alert Messages */
-  .stAlert {
-      background-color: var(--secondary-bg) !important;
-      border-left: 4px solid;
-  }
-  
-  /* Input Fields */
-  .stTextInput>div>div>input {
-      background-color: var(--secondary-bg) !important;
-      color: var(--primary-text) !important;
-  }
-  
-  /* Tab Styling */
-  .stTabs [aria-selected="true"] {
-      background-color: var(--secondary-bg) !important;
+  /* Better buttons */
+  .stButton>button {
+      background: linear-gradient(90deg, var(--success), var(--info)) !important;
+      color: white !important;
   }
