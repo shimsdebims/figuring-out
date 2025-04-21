@@ -61,12 +61,19 @@ except Exception as e:
 
 def load_model():
     try:
-        # First try loading the real model
+        # Try loading the real model - check both possible filenames
         import tensorflow as tf
-        model = tf.keras.models.load_model('Model/crop_model.h5')
-        logger.info("✅ Real model loaded successfully!")
-        return model
-        
+        if os.path.exists('Model/crop_model.h5'):
+            model = tf.keras.models.load_model('Model/crop_model.h5')
+            logger.info("✅ Real model loaded successfully (crop_model.h5)!")
+            return model
+        elif os.path.exists('Model/plant_disease_model.h5'):
+            model = tf.keras.models.load_model('Model/plant_disease_model.h5')
+            logger.info("✅ Real model loaded successfully (plant_disease_model.h5)!")
+            return model
+        else:
+            raise FileNotFoundError("No model file found in the Model directory")
+            
     except Exception as e:
         logger.error(f"❌ Real model failed to load: {str(e)}")
         logger.warning("⚠️ Falling back to temporary mock model")
