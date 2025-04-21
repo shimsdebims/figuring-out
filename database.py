@@ -25,7 +25,32 @@ def initialize_db():
     db.uploads.create_index([("user_id", pymongo.ASCENDING)])
     db.uploads.create_index([("upload_date", pymongo.DESCENDING)])
     ensure_upload_dirs()
+def initialize_db():
+    """Create indexes"""
+    db.users.create_index("username", unique=True)
+    db.uploads.create_index("user_id")
+    db.uploads.create_index([("upload_date", -1)])
 
+# User management functions
+def update_user_password(user_id, new_hashed_pwd):
+    """Update user password"""
+    db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"password": new_hashed_pwd}}
+    )
+
+def clear_user_uploads(user_id):
+    """Delete all uploads for a user"""
+    db.uploads.delete_many({"user_id": user_id})
+
+def delete_user_account(user_id):
+    """Completely remove user account and data"""
+    with client.start_session() as session:
+        with session.start_transaction():
+            db.users.delete_one({"_id": ObjectId(user_id)}, session=session)
+            db.uploads.delete_many({"user_id": user_id}, session=session)
+
+        
 def get_image_bytes(upload_data):
     """Safely extract image bytes from upload data"""
     if 'image_binary' in upload_data:

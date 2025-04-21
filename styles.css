@@ -1,53 +1,112 @@
-/* Main dark theme with MongoDB Atlas inspiration */
+/* MongoDB Atlas-Inspired Dark Theme */
 :root {
-    --primary-bg: #1A1D21;
-    --secondary-bg: #1E2229;
-    --accent-border: #2D3747;
-    --primary-text: #E6EDF3;
-    --secondary-text: #94A3B8;
-    --success: #10B981;
-    --info: #3B82F6;
+    --atlas-dark: #001e2b;
+    --atlas-darker: #00141f;
+    --atlas-primary: #13aa52;
+    --atlas-secondary: #4a90e2;
+    --atlas-text: #f5f5f5;
+    --atlas-text-secondary: #b8c2cc;
+    --atlas-card: #0a2d3e;
+    --atlas-border: #1a3b4d;
+    --atlas-danger: #ff4d4d;
   }
   
-  /* Base app styling */
+  /* Base Styles */
   .stApp {
-      background-color: var(--primary-bg);
-      color: var(--primary-text);
-      font-family: 'Inter', sans-serif;
+    background-color: var(--atlas-dark);
+    color: var(--atlas-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
   }
   
-  /* Leaf icon in title */
+  /* Text Contrast Fixes */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--atlas-text) !important;
+  }
+  
+  p, .stMarkdown, .stText {
+    color: var(--atlas-text-secondary) !important;
+  }
+  
+  /* Header with Leaf Icon */
   .stApp h1::before {
-      content: "🍃";
-      margin-right: 10px;
+    content: "🍃";
+    margin-right: 10px;
+    vertical-align: middle;
   }
   
-  /* Fixed accuracy meter display */
-  .stMetric {
-      background-color: var(--secondary-bg) !important;
-      border-left: 4px solid var(--success) !important;
-      color: var(--primary-text) !important;
-      padding: 1rem !important;
-      border-radius: 8px !important;
+  /* Sidebar - Atlas Inspired */
+  [data-testid="stSidebar"] {
+    background-color: var(--atlas-darker) !important;
+    border-right: 1px solid var(--atlas-border) !important;
   }
   
-  /* Fixed image container warnings */
-  .stImage>img, [data-testid="stImage"]>img {
-      max-width: 100% !important;
-      height: auto !important;
+  [data-testid="stSidebar"] .stMarkdown {
+    color: var(--atlas-text) !important;
   }
   
-  /* Improved cards */
-  .disease-card {
-      background-color: var(--secondary-bg);
-      border-left: 4px solid var(--success);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin: 1rem 0;
-  }
-  
-  /* Better buttons */
+  /* Buttons - Atlas Green */
   .stButton>button {
-      background: linear-gradient(90deg, var(--success), var(--info)) !important;
-      color: white !important;
+    background-color: var(--atlas-primary) !important;
+    color: white !important;
+    border-radius: 6px !important;
+    border: none !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .stButton>button:hover {
+    background-color: #0e8c42 !important;
+    transform: translateY(-1px);
+  }
+  
+  /* Cards - Atlas Style */
+  .disease-card {
+    background-color: var(--atlas-card);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--atlas-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  /* Input Fields */
+  .stTextInput>div>div>input,
+  .stTextInput>div>div>input:focus {
+    background-color: var(--atlas-card) !important;
+    border: 1px solid var(--atlas-border) !important;
+    color: var(--atlas-text) !important;
+    border-radius: 6px !important;
+  }
+  
+  /* Tabs */
+  .stTabs [data-baseweb="tab-list"] {
+    gap: 4px;
+    background-color: var(--atlas-darker);
+    border-radius: 8px;
+    padding: 4px;
+  }
+  
+  .stTabs [data-baseweb="tab"] {
+    background-color: transparent !important;
+    color: var(--atlas-text-secondary) !important;
+    border-radius: 6px !important;
+    padding: 0.5rem 1rem !important;
+  }
+  
+  .stTabs [aria-selected="true"] {
+    background-color: var(--atlas-card) !important;
+    color: var(--atlas-primary) !important;
+  }
+  
+  /* Danger Actions */
+  .danger-zone {
+    border: 1px solid var(--atlas-danger);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .danger-button {
+    background-color: var(--atlas-danger) !important;
   }

@@ -5,24 +5,21 @@ import os
 import json
 from io import BytesIO
 from pathlib import Path
-
-# Local imports
-from auth import register_user, login_user
-from database import initialize_db, insert_upload, get_user_uploads, insert_feedback
+from auth import register_user, login_user, hash_password, is_strong_password
+from database import initialize_db, insert_upload, get_user_uploads, insert_feedback, delete_user_account, clear_user_uploads, update_user_password
 from model import predict_disease, load_model, is_plant_image
 
-# ======================
-# APP CONFIGURATION
-# ======================
+# ================
+# APP CONFIG
+# ================
 st.set_page_config(
     page_title="CropGuard",
-    page_icon="🍃",  # Leaf icon for browser tab
+    page_icon="🍃",
     layout="wide"
 )
 
 # Load CSS
 def inject_css():
-    """Inject custom CSS styles from file"""
     css_path = os.path.join(os.path.dirname(__file__), "styles.css")
     if os.path.exists(css_path):
         with open(css_path) as f:
@@ -30,26 +27,27 @@ def inject_css():
 
 inject_css()
 
-# Initialize database
+# Initialize DB
 initialize_db()
 
-# ======================
-# SESSION STATE SETUP
-# ======================
+# ================
+# SESSION STATE
+# ================
 if 'logged_in' not in st.session_state:
     st.session_state.update({
         'logged_in': False,
         'username': None,
         'user_id': None,
-        'model': load_model(),  # Load model once
-        'camera_on': False
+        'model': load_model(),
+        'camera_on': False,
+        'current_tab': "Home"
     })
 
-# ======================
-# HELPER FUNCTIONS
-# ======================
+# ================
+# CORE FUNCTIONS
+# ================
 def display_disease_info(disease):
-    """Display disease information in styled card"""
+    """Display disease information card"""
     try:
         with open("disease_info.json") as f:
             disease_info = json.load(f)
@@ -68,7 +66,7 @@ def display_disease_info(disease):
         st.error(f"Could not load disease info: {str(e)}")
 
 def process_image(image, source_type):
-    """Handle image processing and prediction"""
+    """Handle image prediction"""
     if not is_plant_image(image):
         st.error("Please upload a clear photo of a plant leaf.")
         return
@@ -106,25 +104,84 @@ def process_image(image, source_type):
                 "timestamp": datetime.datetime.now(datetime.UTC)
             })
 
-# ======================
+# ================
+# USER SETTINGS
+# ================
+def show_user_settings():
+    """User account management section"""
+    st.header("⚙️ Account Settings")
+    
+    with st.expander("🔒 Change Password"):
+        with st.form("change_password"):
+            current = st.text_input("Current Password", type="password")
+            new = st.text_input("New Password", type="password")
+            confirm = st.text_input("Confirm New Password", type="password")
+            
+            if st.form_submit_button("Update Password"):
+                user = find_user_by_username(st.session_state.username)
+                if user and user["password"] == hash_password(current):
+                    is_strong, msg = is_strong_password(new)
+                    if not is_strong:
+                        st.error(msg)
+                    elif new != confirm:
+                        st.error("Passwords don't match")
+                    else:
+                        update_user_password(st.session_state.user_id, hash_password(new))
+                        st.success("Password updated successfully!")
+                else:
+                    st.error("Current password is incorrect")
+    
+    with st.expander("🗑️ Clear Upload History"):
+        st.warning("This will permanently delete all your upload history")
+        if st.button("Clear All Uploads", key="clear_uploads"):
+            clear_user_uploads(st.session_state.user_id)
+            st.success("Upload history cleared!")
+    
+    with st.container(border=True, className="danger-zone"):
+        st.subheader("🚨 Danger Zone")
+        st.warning("These actions are irreversible")
+        
+        with st.form("delete_account"):
+            password = st.text_input("Confirm Password", type="password")
+            if st.form_submit_button("❌ Delete My Account", type="primary"):
+                user = find_user_by_username(st.session_state.username)
+                if user and user["password"] == hash_password(password):
+                    delete_user_account(st.session_state.user_id)
+                    st.session_state.logged_in = False
+                    st.rerun()
+                else:
+                    st.error("Incorrect password")
+
+# ================
 # MAIN APP LAYOUT
-# ======================
+# ================
 st.title("🍃 CropGuard - Plant Disease Detection")
 
 # Home Page (Before Login)
 if not st.session_state.logged_in:
     st.markdown("""
-    ## 🌾 Welcome to CropGuard!
-    Detect plant diseases instantly using AI.
+    ## 🌱 Welcome to CropGuard!
+    **AI-powered plant disease detection for farmers and gardeners**
+    
+    Our system can identify common diseases in:
+    - Tomatoes 🍅
+    - Potatoes 🥔 
+    - Corn 🌽
+    - Rice 🌾
+    
+    ⚠️ **Important Limitations:**
+    - Currently supports only the specific diseases listed in our database
+    - Works best with clear, well-lit photos of leaves
+    - Cannot detect all possible plant diseases or nutrient deficiencies
     """)
     
-    # Example images with error handling
+    # Example images
     st.subheader("📸 Example Detections")
     cols = st.columns(3)
     examples = {
-        "Healthy Tomato": "assets/tomato_healthy.jpg",
-        "Diseased Potato": "assets/potato_diseased.jpg", 
-        "Healthy Corn": "assets/corn_healthy.jpg"
+        "Healthy Potato": "Assets/PotatoHealthy(2161).JPG",
+        "Tomato Septoria Leaf Spot": "Assets/TomatoSeptoriaLeafSpot(3628).JPG",
+        "Corn Common Rust": "Assets/CornCommonRust(3279).JPG"
     }
     
     for col, (name, path) in zip(cols, examples.items()):
@@ -133,21 +190,6 @@ if not st.session_state.logged_in:
                 st.image(path, caption=name, use_container_width=True)
             except:
                 st.info(f"Example image not available: {name}")
-
-    # New content sections
-    with st.expander("📊 Community Insights"):
-        st.write("""
-        - 82% accurate tomato disease detection
-        - 91% potato blight prevention rate  
-        - 76% corn rust identification
-        """)
-    
-    st.markdown("""
-    ### 🌱 Why Choose CropGuard?
-    - Instant disease detection
-    - Science-backed treatment plans  
-    - Save up to 40% of your crop yield
-    """)
 
     # Auth in sidebar
     with st.sidebar:
@@ -163,7 +205,7 @@ if not st.session_state.logged_in:
                     if success:
                         st.session_state.update({
                             'logged_in': True,
-                            'username': username, 
+                            'username': username,
                             'user_id': message
                         })
                         st.rerun()
@@ -187,10 +229,18 @@ else:
     with st.sidebar:
         st.title(f"👋 {st.session_state.username}")
         
+        # Navigation
+        st.session_state.current_tab = st.radio(
+            "Navigation",
+            ["Home", "Detect", "Settings"],
+            index=["Home", "Detect", "Settings"].index(st.session_state.current_tab)
+        )
+        
         if st.button("Logout"):
             st.session_state.logged_in = False
             st.rerun()
         
+        # Recent history
         st.subheader("📚 Your History")
         uploads = get_user_uploads(st.session_state.user_id, limit=3)
         if uploads:
@@ -203,40 +253,44 @@ else:
         else:
             st.info("No detection history")
 
-    # Main tabs
-    tab1, tab2, tab3 = st.tabs(["📤 Upload", "📷 Camera", "🌿 Resources"])
-    
-    with tab1:
-        st.header("Upload Image")
-        uploaded_file = st.file_uploader("Choose image...", type=["jpg", "jpeg", "png"])
-        if uploaded_file and st.button("Analyze"):
-            process_image(uploaded_file, "upload")
-    
-    with tab2:
-        st.header("Camera Capture")
-        if st.button(f"{'📷 Off' if st.session_state.camera_on else '📸 On'}"):
-            st.session_state.camera_on = not st.session_state.camera_on
-            st.rerun()
-        
-        if st.session_state.camera_on:
-            img = st.camera_input("Point at plant leaf")
-            if img and st.button("Analyze"):
-                process_image(img, "camera")
-    
-    with tab3:
-        st.header("Plant Care Resources")
-        tips = st.columns(3)
-        tips[0].info("**Lighting**: Use natural light")
-        tips[1].warning("**Angle**: Shoot leaves flat-on")
-        tips[2].success("**Focus**: Close-up of affected areas")
-        
+    # Main content
+    if st.session_state.current_tab == "Home":
+        st.header("🌿 Getting Started")
         st.markdown("""
-        ### 🚜 Best Practices
-        - Water in the morning
-        - Rotate crops annually  
-        - Space plants properly
+        ### How to Use CropGuard:
+        1. **Capture** clear photos of plant leaves
+        2. **Upload** images through our detection interface
+        3. **Receive** instant diagnosis and treatment advice
         
-        ### 📚 Learn More
-        [USDA Plant Health](https://www.aphis.usda.gov)  
-        [Extension Services](https://www.extension.org)
+        ### Supported Plants & Diseases:
+        - **Tomatoes**: Leaf Mold, Yellow Curl Virus, Septoria Spot
+        - **Potatoes**: Late Blight, Early Blight, Scab
+        - **Corn**: Northern Leaf Blight, Common Rust, Gray Spot
+        - **Rice**: Blast, Bacterial Blight, Brown Spot
+        
+        ⚠️ **Note**: This tool cannot diagnose all plant health issues. 
+        For unknown conditions, consult a plant pathologist.
         """)
+        
+    elif st.session_state.current_tab == "Detect":
+        tab1, tab2 = st.tabs(["📤 Upload Image", "📷 Camera Capture"])
+        
+        with tab1:
+            st.header("Upload Plant Image")
+            uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+            if uploaded_file and st.button("Analyze"):
+                process_image(uploaded_file, "upload")
+        
+        with tab2:
+            st.header("Real-time Detection")
+            if st.button(f"{'📷 Turn Off Camera' if st.session_state.camera_on else '📸 Turn On Camera'}"):
+                st.session_state.camera_on = not st.session_state.camera_on
+                st.rerun()
+            
+            if st.session_state.camera_on:
+                img = st.camera_input("Point camera at plant leaf")
+                if img and st.button("Analyze Capture"):
+                    process_image(img, "camera")
+    
+    elif st.session_state.current_tab == "Settings":
+        show_user_settings()
