@@ -14,11 +14,14 @@ from pathlib import Path
 import tensorflow as tf
 import os
 import os
+# Force version compatibility
 os.environ["STREAMLIT_DISABLE_DEPENDENCY_CHECK"] = "1"
-sys.modules["streamlit"].__version__ = "1.44.1"  # Force version recognition
 
+# Set up TensorFlow environment variables before importing
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Reduce TensorFlow logging
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU-only operation if needed
 
-# Local imports
+# Local imports (rest of your imports remain the same)
 from auth import register_user, login_user, is_valid_email
 from database import initialize_db, insert_upload, get_user_uploads, insert_feedback
 from model import predict_disease, load_model, is_plant_image
