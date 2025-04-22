@@ -7,6 +7,10 @@ def hash_password(password):
     """Hash password using SHA-256"""
     return hashlib.sha256(password.encode()).hexdigest()
 
+def find_user_by_username(username):
+    """Find user by username"""
+    return db.users.find_one({"username": username})
+
 def is_valid_email(email):
     """Basic email format validation"""
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
@@ -46,6 +50,8 @@ def register_user(username, password, email):
 def login_user(username, password):
     """Authenticate user"""
     user = find_user_by_username(username)
-    if not user or user["password"] != hash_password(password):
+    if not user:
+        return False, "Invalid username or password"
+    if user["password"] != hash_password(password):
         return False, "Invalid username or password"
     return True, str(user["_id"])
