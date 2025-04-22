@@ -4,10 +4,11 @@ import datetime
 from database import find_user_by_username, insert_user
 
 def hash_password(password):
+    """Hash password using SHA-256"""
     return hashlib.sha256(password.encode()).hexdigest()
 
 def is_valid_email(email):
-    """Basic email format validation without disposable check"""
+    """Basic email format validation"""
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return re.match(pattern, email) is not None
 
@@ -43,6 +44,7 @@ def register_user(username, password, email):
     return insert_user(user_data)
 
 def login_user(username, password):
+    """Authenticate user"""
     user = find_user_by_username(username)
     if not user or user["password"] != hash_password(password):
         return False, "Invalid username or password"

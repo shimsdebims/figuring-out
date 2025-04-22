@@ -6,6 +6,7 @@ from pymongo.errors import DuplicateKeyError
 from bson.binary import Binary
 from PIL import Image
 import io
+from bson.objectid import ObjectId 
 
 # Load environment variables
 load_dotenv()
@@ -25,11 +26,16 @@ def initialize_db():
     db.uploads.create_index([("user_id", pymongo.ASCENDING)])
     db.uploads.create_index([("upload_date", pymongo.DESCENDING)])
     ensure_upload_dirs()
-def initialize_db():
-    """Create indexes"""
-    db.users.create_index("username", unique=True)
-    db.uploads.create_index("user_id")
-    db.uploads.create_index([("upload_date", -1)])
+
+def insert_user(user_data):
+    """Insert new user into database"""
+    try:
+        result = db.users.insert_one(user_data)
+        return True, str(result.inserted_id)
+    except DuplicateKeyError:
+        return False, "Username already exists"
+    except Exception as e:
+        return False, str(e)
 
 # User management functions
 def update_user_password(user_id, new_hashed_pwd):
