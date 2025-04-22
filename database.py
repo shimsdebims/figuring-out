@@ -27,6 +27,10 @@ def initialize_db():
     db.uploads.create_index([("upload_date", pymongo.DESCENDING)])
     ensure_upload_dirs()
 
+def find_user_by_username(username):
+    """Find user by username"""
+    return db.users.find_one({"username": username})
+
 def insert_user(user_data):
     """Insert new user into database"""
     try:
@@ -34,6 +38,14 @@ def insert_user(user_data):
         return True, str(result.inserted_id)
     except DuplicateKeyError:
         return False, "Username already exists"
+    except Exception as e:
+        return False, str(e)
+
+def insert_upload(upload_data):
+    """Insert upload data into database"""
+    try:
+        result = db.uploads.insert_one(upload_data)
+        return True, str(result.inserted_id)
     except Exception as e:
         return False, str(e)
 
