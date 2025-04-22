@@ -12,18 +12,6 @@ def is_valid_email(email):
     pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return re.match(pattern, email) is not None
 
-def find_user_by_username(username):
-    """Find user by username"""
-    return db.users.find_one({"username": username})
-
-def insert_upload(upload_data):
-    """Insert upload data into database"""
-    try:
-        result = db.uploads.insert_one(upload_data)
-        return True, str(result.inserted_id)
-    except Exception as e:
-        return False, str(e)
-
 def is_strong_password(password):
     """Check password meets requirements"""
     if len(password) < 8:
