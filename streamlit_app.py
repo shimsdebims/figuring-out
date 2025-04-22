@@ -6,8 +6,19 @@ import json
 from io import BytesIO
 from pathlib import Path
 from auth import register_user, login_user, hash_password, is_strong_password
-from database import initialize_db, insert_upload, get_user_uploads, insert_feedback, delete_user_account, clear_user_uploads, update_user_password
+from database import (
+    initialize_db, 
+    insert_upload, 
+    get_user_uploads, 
+    insert_feedback, 
+    delete_user_account, 
+    clear_user_uploads, 
+    update_user_password,
+    find_user_by_username  
+)
 from model import predict_disease, load_model, is_plant_image
+
+
 
 # ================
 # APP CONFIG
