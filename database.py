@@ -11,6 +11,7 @@ from bson.objectid import ObjectId
 # Load environment variables
 load_dotenv()
 
+
 # Database connection
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 client = MongoClient(MONGO_URI)
