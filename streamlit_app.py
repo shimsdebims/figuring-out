@@ -205,35 +205,36 @@ if not st.session_state.logged_in:
     # Auth in sidebar
     with st.sidebar:
         st.title("Account")
-        tab1, tab2 = st.tabs(["Login", "Register"])
+        login_tab, register_tab = st.tabs(["Login", "Register"])
+    
+    with login_tab:
+        with st.form("login_form"):  # Changed key to be unique
+            username = st.text_input("Username", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
+            if st.form_submit_button("Login"):
+                success, message = login_user(username, password)
+                if success:
+                    st.session_state.update({
+                        'logged_in': True,
+                        'username': username,
+                        'user_id': message
+                    })
+                    st.rerun()
+                else:
+                    st.error(message)
         
-        with tab1:
-            with st.form("login"):
-                username = st.text_input("Username")
-                password = st.text_input("Password", type="password")
-                if st.form_submit_button("Login"):
-                    success, message = login_user(username, password)
-                    if success:
-                        st.session_state.update({
-                            'logged_in': True,
-                            'username': username,
-                            'user_id': message
-                        })
-                        st.rerun()
-                    else:
-                        st.error(message)
         
-        with tab2:
-            with st.form("register"):
-                new_user = st.text_input("New Username")
-                new_pass = st.text_input("New Password", type="password")
-                email = st.text_input("Email")
-                if st.form_submit_button("Register"):
-                    success, message = register_user(new_user, new_pass, email)
-                    if success:
-                        st.success("Account created! Please login.")
-                    else:
-                        st.error(message)
+        with register_tab:
+            with st.form("register_form"):  # Changed key to be unique
+                new_user = st.text_input("New Username", key="reg_username")
+                new_pass = st.text_input("New Password", type="password", key="reg_password")
+                email = st.text_input("Email", key="reg_email")
+            if st.form_submit_button("Register"):
+                success, message = register_user(new_user, new_pass, email)
+                if success:
+                    st.success("Account created! Please login.")
+                else:
+                    st.error(message)
 
 # Main App (After Login)
 else:

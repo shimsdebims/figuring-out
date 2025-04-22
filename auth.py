@@ -30,28 +30,56 @@ def is_strong_password(password):
 
 def register_user(username, password, email):
     """Register new user with validation"""
-    # Check password strength
-    is_strong, msg = is_strong_password(password)
-    if not is_strong:
-        return False, msg
+    try:
+        # Input validation
+        if not username or not password or not email:
+            return False, "All fields are required"
+            
+        # Check password strength
+        is_strong, msg = is_strong_password(password)
+        if not is_strong:
+            return False, msg
+            
+        # Check if user exists
+        if find_user_by_username(username):
+            return False, "Username already exists"
+            
+        # Validate email
+        if not is_valid_email(email):
+            return False, "Invalid email format"
+            
+        # Create user
+        hashed_password = hash_password(password)
+        user_data = {
+            "username": username,
+            "password": hashed_password,
+            "email": email,
+            "created_at": datetime.datetime.now(datetime.UTC)
+        }
         
-    if find_user_by_username(username):
-        return False, "Username already exists"
+        success, user_id = insert_user(user_data)
+        if not success:
+            return False, user_id  # user_id contains error message here
+            
+        return True, "Registration successful"
         
-    hashed_password = hash_password(password)
-    user_data = {
-        "username": username,
-        "password": hashed_password,
-        "email": email,
-        "created_at": datetime.datetime.now(datetime.UTC)
-    }
-    return insert_user(user_data)
+    except Exception as e:
+        return False, f"Registration error: {str(e)}"
 
 def login_user(username, password):
     """Authenticate user"""
-    user = find_user_by_username(username)
-    if not user:
-        return False, "Invalid username or password"
-    if user["password"] != hash_password(password):
-        return False, "Invalid username or password"
-    return True, str(user["_id"])
+    try:
+        if not username or not password:
+            return False, "Username and password required"
+            
+        user = find_user_by_username(username)
+        if not user:
+            return False, "Invalid username or password"
+            
+        if user["password"] != hash_password(password):
+            return False, "Invalid username or password"
+            
+        return True, str(user["_id"])
+        
+    except Exception as e:
+        return False, f"Login error: {str(e)}"
