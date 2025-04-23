@@ -140,29 +140,53 @@ def process_image(image, source_type):
 # ================
 # USER SETTINGS
 # ================
+# def show_user_settings():
+#     """User account management section"""
+#     st.header("⚙️ Account Settings")
+    
+#     with st.expander("🔒 Change Password"):
+#         with st.form("change_password"):
+#             current = st.text_input("Current Password", type="password")
+#             new = st.text_input("New Password", type="password")
+#             confirm = st.text_input("Confirm New Password", type="password")
+            
+#             if st.form_submit_button("Update Password"):
+#                 user = find_user_by_username(st.session_state.username)
+#                 if user and user["password"] == hash_password(current):
+#                     is_strong, msg = is_strong_password(new)
+#                     if not is_strong:
+#                         st.error(msg)
+#                     elif new != confirm:
+#                         st.error("Passwords don't match")
+#                     else:
+#                         update_user_password(st.session_state.user_id, hash_password(new))
+#                         st.success("Password updated successfully!")
+#                 else:
+#                     st.error("Current password is incorrect")
+
 def show_user_settings():
     """User account management section"""
     st.header("⚙️ Account Settings")
     
+    # Generate unique key using session state
+    form_key = f"change_password_{st.session_state.user_id}"
+    
     with st.expander("🔒 Change Password"):
-        with st.form("change_password"):
+        with st.form(key=form_key):  # Unique key per user
             current = st.text_input("Current Password", type="password")
             new = st.text_input("New Password", type="password")
             confirm = st.text_input("Confirm New Password", type="password")
             
             if st.form_submit_button("Update Password"):
-                user = find_user_by_username(st.session_state.username)
-                if user and user["password"] == hash_password(current):
-                    is_strong, msg = is_strong_password(new)
-                    if not is_strong:
-                        st.error(msg)
-                    elif new != confirm:
-                        st.error("Passwords don't match")
-                    else:
-                        update_user_password(st.session_state.user_id, hash_password(new))
-                        st.success("Password updated successfully!")
+                success, message = update_user_password(
+                    st.session_state.user_id,
+                    current,
+                    new
+                )
+                if success:
+                    st.success(message)
                 else:
-                    st.error("Current password is incorrect")
+                    st.error(message)
     
     with st.expander("🗑️ Clear Upload History"):
         st.warning("This will permanently delete all your upload history")
