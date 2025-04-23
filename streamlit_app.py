@@ -269,6 +269,8 @@ else:
             ["Home", "Detect", "Settings"],
             index=["Home", "Detect", "Settings"].index(st.session_state.current_tab)
         )
+
+        
         
         if st.button("Logout"):
             st.session_state.logged_in = False

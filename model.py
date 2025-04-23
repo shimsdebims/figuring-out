@@ -40,13 +40,15 @@ def load_model():
         
         for path in model_paths:
             if os.path.exists(path):
-                return tf.keras.models.load_model(path)
+                model = tf.keras.models.load_model(path)
+                logger.info(f"✅ Successfully loaded model from: {path}")
+                return model
         
-        logger.warning("No model file found, using mock model")
+        logger.warning("⚠️ No model file found, using mock model")
         return MockModel()
         
     except Exception as e:
-        logger.error(f"Model loading failed: {str(e)}")
+        logger.error(f"❌ Model loading failed: {str(e)}")
         return MockModel()
 
 def is_plant_image(image):
