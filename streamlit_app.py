@@ -16,7 +16,6 @@ from database import (
     update_user_password,
     find_user_by_username  
 )
-from model import load_model, predict_disease
 import time
 from model import predict_disease, load_model, is_plant_image
 
@@ -42,12 +41,8 @@ inject_css()
 initialize_db()
 
 @st.cache_resource
-def load_model():
-    from model import load_model as _load_model
-    return _load_model()
-
-if 'model' not in st.session_state:
-    st.session_state.model = load_model()
+def get_model():
+    return load_model()
 
 # ================
 # SESSION STATE
@@ -57,7 +52,6 @@ if 'logged_in' not in st.session_state:
         'logged_in': False,
         'username': None,
         'user_id': None,
-        'model': load_model(),
         'camera_on': False,
         'current_tab': "Home"
     })
@@ -65,10 +59,11 @@ if 'logged_in' not in st.session_state:
 if 'model' not in st.session_state:
     with st.spinner("🌱 Loading disease detection model..."):
         try:
-            st.session_state.model = load_model()
-            time.sleep(1)  # Let users see the success message
-        except:
-            st.error("Failed to load model")
+            st.session_state.model = get_model()
+        except Exception as e:
+            st.error(f"Failed to load model: {str(e)}")
+            # Create a mock model as a fallback
+            from model import MockModel
             st.session_state.model = MockModel()
 
 # ================
@@ -270,8 +265,6 @@ else:
             ["Home", "Detect", "Settings"],
             index=["Home", "Detect", "Settings"].index(st.session_state.current_tab)
         )
-
-        
         
         if st.button("Logout"):
             st.session_state.logged_in = False
