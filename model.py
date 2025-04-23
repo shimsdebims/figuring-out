@@ -59,7 +59,9 @@ class MockModel:
 
 @st.cache_resource
 def load_model():
-    TFLITE_URL = "https://drive.google.com/uc?id=1p-wYYieER16UuSmP4fdEwEpnqzUxXaGi"
+    """Robust model loader with multiple fallbacks"""
+    # Direct download URL (no need for ID extraction)
+    TFLITE_URL = "https://drive.google.com/uc?export=download&id=1p-wYYieER16UuSmP4fdEwEpnqzUxXaGi"
     TFLITE_PATH = "Model/plant_disease_model.tflite"
     
     try:
@@ -69,45 +71,47 @@ def load_model():
             interpreter = tf.lite.Interpreter(model_path=TFLITE_PATH)
             interpreter.allocate_tensors()
             return interpreter
-            
-        # 2. Download from Google Drive
+
+        # 2. Ensure Model directory exists
         os.makedirs("Model", exist_ok=True)
-        with st.spinner("Downloading AI model (80MB - first time only)..."):
-            import gdown
-            from urllib.parse import urlparse
-            import shutil
-            
-            # Temporary download path
-            temp_path = "Model/temp_model.tflite"
-            
-            # Download with progress
+        
+        # 3. Download with multiple fallback methods
+        with st.spinner("🌱 Downloading disease detector (80MB)..."):
+
+            # Method 1: Direct download with requests
             try:
-                gdown.download(TFLITE_URL, temp_path, quiet=False)
+                import requests
+                response = requests.get(TFLITE_URL, stream=True, timeout=60)
+                response.raise_for_status()
                 
-                # Verify download completed
-                if not os.path.exists(temp_path):
-                    raise Exception("Download failed - no file received")
-                    
-                # Verify file size (should be >50MB)
-                if os.path.getsize(temp_path) < 50_000_000:
-                    raise Exception(f"File too small ({os.path.getsize(temp_path)} bytes)")
-                    
-                # Move to final location
-                shutil.move(temp_path, TFLITE_PATH)
+                with open(TFLITE_PATH, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        
+            except Exception as e:
+                st.warning(f"Download method 1 failed: {str(e)}")
                 
-            except Exception as download_error:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-                raise download_error
-                
-        # 3. Load the downloaded model
-        if os.path.exists(TFLITE_PATH):
-            interpreter = tf.lite.Interpreter(model_path=TFLITE_PATH)
-            interpreter.allocate_tensors()
-            st.toast("Model loaded successfully!", icon="✅")
-            return interpreter
+                # Method 2: Alternative URL format
+                try:
+                    alt_url = "https://drive.google.com/uc?export=download&confirm=yes&id=1p-wYYieER16UuSmP4fdEwEpnqzUxXaGi"
+                    import gdown
+                    gdown.download(alt_url, TFLITE_PATH, quiet=False)
+                except Exception as e:
+                    st.warning(f"Download method 2 failed: {str(e)}")
+                    raise Exception("All download methods failed")
+
+        # 4. Verify download
+        if not os.path.exists(TFLITE_PATH):
+            raise Exception("File missing after download")
             
-        raise Exception("Model file missing after download")
+        if os.path.getsize(TFLITE_PATH) < 50_000_000:
+            raise Exception(f"File too small (likely incomplete): {os.path.getsize(TFLITE_PATH)} bytes")
+
+        # 5. Load the model
+        interpreter = tf.lite.Interpreter(model_path=TFLITE_PATH)
+        interpreter.allocate_tensors()
+        st.success("Model loaded successfully!")
+        return interpreter
         
     except Exception as e:
         st.error(f"""
