@@ -31,24 +31,29 @@ class MockModel:
         return np.random.uniform(0, 1, size=(1, len(CLASS_NAMES)))
 
 def load_model():
-    """Load the trained TensorFlow model with error handling"""
     try:
-        model_paths = [
-            "Model/crop_model.h5",
-            "Model/plant_disease_model.h5"
-        ]
+        model_url = "https://drive.google.com/uc?export=download&id=1vljcvW2gO_uU88igu41dG8MlKN1quoVP"
+        model_path = "Model/plant_disease_model.h5"
         
-        for path in model_paths:
-            if os.path.exists(path):
-                model = tf.keras.models.load_model(path)
-                logger.info(f"✅ Successfully loaded model from: {path}")
-                return model
+        # Download only if file doesn't exist
+        if not os.path.exists(model_path):
+            os.makedirs("Model", exist_ok=True)
+            
+            # Download model
+            response = requests.get(model_url)
+            response.raise_for_status()  # Check for errors
+            
+            # Save to disk
+            with open(model_path, "wb") as f:
+                f.write(response.content)
+            
+            print("✅ Model downloaded from Google Drive!")
         
-        logger.warning("⚠️ No model file found, using mock model")
-        return MockModel()
+        # Load .h5 model
+        return tf.keras.models.load_model(model_path)
         
     except Exception as e:
-        logger.error(f"❌ Model loading failed: {str(e)}")
+        print(f"❌ Error loading model: {str(e)}")
         return MockModel()
 
 def is_plant_image(image):
@@ -70,28 +75,22 @@ def is_plant_image(image):
         return False
 
 def predict_disease(image_input):
-    """Make disease prediction on input image"""
     try:
         # Preprocess image
         img = Image.open(image_input).convert('RGB')
-        img = img.resize((224, 224))
+        img = img.resize((224, 224))  # Match your model's expected input
         img_array = np.array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
         
         # Get model from session state
         model = st.session_state.model
         
-        # Make prediction
+        # Predict (for .h5 model)
         predictions = model.predict(img_array, verbose=0)[0]
         predicted_idx = np.argmax(predictions)
         confidence = float(predictions[predicted_idx])
         disease = CLASS_NAMES[predicted_idx] if predicted_idx < len(CLASS_NAMES) else "Unknown"
         
-        # Handle mock model case
-        if isinstance(model, MockModel):
-            disease = "[MOCK] " + disease
-            confidence = min(confidence, 0.95)
-            
         return disease, confidence
         
     except Exception as e:

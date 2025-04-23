@@ -39,6 +39,14 @@ inject_css()
 # Initialize DB
 initialize_db()
 
+@st.cache_resource
+def load_model():
+    from model import load_model as _load_model
+    return _load_model()
+
+if 'model' not in st.session_state:
+    st.session_state.model = load_model()
+
 # ================
 # SESSION STATE
 # ================
