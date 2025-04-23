@@ -16,6 +16,8 @@ from database import (
     update_user_password,
     find_user_by_username  
 )
+from model import load_model, predict_disease
+import time
 from model import predict_disease, load_model, is_plant_image
 
 # ================
@@ -60,6 +62,15 @@ if 'logged_in' not in st.session_state:
         'current_tab': "Home"
     })
 
+if 'model' not in st.session_state:
+    with st.spinner("🌱 Loading disease detection model..."):
+        try:
+            st.session_state.model = load_model()
+            time.sleep(1)  # Let users see the success message
+        except:
+            st.error("Failed to load model")
+            st.session_state.model = MockModel()
+
 # ================
 # CORE FUNCTIONS
 # ================
@@ -83,36 +94,18 @@ def display_disease_info(disease):
         st.error(f"Could not load disease info: {str(e)}")
 
 def process_image(image, source_type):
-    """Handle image prediction"""
     try:
-        # Convert the uploaded file to bytes if it's not already
-        if hasattr(image, 'read'):
-            image_bytes = image.read()
-        else:
-            image_bytes = image.getvalue()
-            
-        # Convert to PIL Image for verification
-        pil_image = Image.open(BytesIO(image_bytes))
-        
-        if not is_plant_image(pil_image):
-            st.error("Please upload a clear photo of a plant leaf.")
+        if not is_plant_image(image):
+            st.error("❌ Please upload a clear photo of a plant leaf")
             return
             
         with st.spinner("🔍 Analyzing..."):
-            disease, confidence = predict_disease(BytesIO(image_bytes))
+            disease, confidence = predict_disease(image)
             
-            # Save to database
-            upload_data = {
-                "user_id": st.session_state.user_id,
-                "image": image_bytes,
-                "disease_prediction": disease,
-                "confidence": confidence,
-                "upload_date": datetime.datetime.now(datetime.UTC),
-                "source": source_type
-            }
-            insert_upload(upload_data)
-            
-            # Display results
+            if disease == "Error":
+                st.error("Analysis failed. Please try another image.")
+                return
+                
             st.success(f"🔬 Detection Result: **{disease}**")
             st.metric("Confidence Level", f"{confidence:.0%}")
             display_disease_info(disease)
