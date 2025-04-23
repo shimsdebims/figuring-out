@@ -59,36 +59,61 @@ class MockModel:
 
 @st.cache_resource
 def load_model():
-    """Load TFLite model with Streamlit caching"""
     TFLITE_URL = "https://drive.google.com/uc?id=1p-wYYieER16UuSmP4fdEwEpnqzUxXaGi"
     TFLITE_PATH = "Model/plant_disease_model.tflite"
     
     try:
         # 1. Check local cache first
         if os.path.exists(TFLITE_PATH):
-            logger.info("Loading TFLite model from local cache")
+            st.toast("Loading model from cache", icon="✅")
             interpreter = tf.lite.Interpreter(model_path=TFLITE_PATH)
             interpreter.allocate_tensors()
             return interpreter
             
-        # 2. Download from Google Drive if needed
+        # 2. Download from Google Drive
         os.makedirs("Model", exist_ok=True)
-        with st.spinner("🌱 Downloading optimized disease detector (80MB)..."):
+        with st.spinner("Downloading AI model (80MB - first time only)..."):
             import gdown
-            gdown.download(TFLITE_URL, TFLITE_PATH, quiet=False)
+            from urllib.parse import urlparse
+            import shutil
             
-            if not os.path.exists(TFLITE_PATH):
-                raise Exception("Download completed but file missing")
+            # Temporary download path
+            temp_path = "Model/temp_model.tflite"
+            
+            # Download with progress
+            try:
+                gdown.download(TFLITE_URL, temp_path, quiet=False)
                 
-            # Initialize TFLite interpreter
+                # Verify download completed
+                if not os.path.exists(temp_path):
+                    raise Exception("Download failed - no file received")
+                    
+                # Verify file size (should be >50MB)
+                if os.path.getsize(temp_path) < 50_000_000:
+                    raise Exception(f"File too small ({os.path.getsize(temp_path)} bytes)")
+                    
+                # Move to final location
+                shutil.move(temp_path, TFLITE_PATH)
+                
+            except Exception as download_error:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                raise download_error
+                
+        # 3. Load the downloaded model
+        if os.path.exists(TFLITE_PATH):
             interpreter = tf.lite.Interpreter(model_path=TFLITE_PATH)
             interpreter.allocate_tensors()
             st.toast("Model loaded successfully!", icon="✅")
             return interpreter
             
+        raise Exception("Model file missing after download")
+        
     except Exception as e:
-        logger.error(f"Model load failed: {str(e)}")
-        st.error("⚠️ Couldn't load full model (using demo mode)")
+        st.error(f"""
+        ⚠️ Model loading failed: {str(e)}
+        Using demo mode with limited functionality
+        """)
         return MockModel()
 
 def predict_disease(image_input):
