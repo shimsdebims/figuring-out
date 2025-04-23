@@ -49,3 +49,28 @@ def login_user(username, password):
     if not user or user["password"] != hash_password(password):
         return False, "Invalid username or password"
     return True, str(user["_id"])
+
+def update_user_password(user_id, current_password, new_password):
+    """Secure password update with validation"""
+    from database import find_user_by_id
+    
+    # 1. Verify current password
+    user = find_user_by_id(user_id)
+    if not user or user["password"] != hash_password(current_password):
+        return False, "Current password is incorrect"
+    
+    # 2. Validate new password
+    is_strong, msg = is_strong_password(new_password)
+    if not is_strong:
+        return False, msg
+    
+    # 3. Update password
+    try:
+        from database import db
+        db.users.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"password": hash_password(new_password)}}
+        )
+        return True, "Password updated successfully"
+    except Exception as e:
+        return False, str(e)
