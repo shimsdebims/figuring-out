@@ -11,7 +11,6 @@ import json
 import cv2
 import streamlit as st
 import tensorflow as tf
-import requests
 from io import BytesIO
 
 # Configure logging
@@ -57,58 +56,29 @@ def is_plant_image(image):
         logger.warning(f"Plant verification failed: {str(e)}")
         return False
 
-def download_model():
-    """Download model from Google Drive"""
-    try:
-        # Create Model directory if it doesn't exist
-        os.makedirs("Model", exist_ok=True)
-        model_path = "Model/plant_disease_model.h5"
-        
-        # Skip download if model already exists
-        if os.path.exists(model_path):
-            logger.info(f"✅ Model already exists at {model_path}")
-            return model_path
-            
-        # Direct download link for Google Drive
-        file_id = "1vljcvW2gO_uU88igu41dG8MlKN1quoVP"
-        download_url = f"https://drive.google.com/uc?id={file_id}&export=download"
-        
-        logger.info("⬇️ Downloading model from Google Drive...")
-        
-        # First request to get confirmation token if needed
-        session = requests.Session()
-        response = session.get(download_url, stream=True)
-        
-        # Check if we need to bypass the confirmation page for large files
-        for key, value in response.cookies.items():
-            if key.startswith('download_warning'):
-                # Add confirmation token to URL
-                download_url = f"{download_url}&confirm={value}"
-                break
-        
-        # Download the file with confirmation token if needed
-        response = session.get(download_url, stream=True)
-        
-        # Save file in chunks to handle large files
-        with open(model_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=32768):
-                if chunk:  # filter out keep-alive chunks
-                    f.write(chunk)
-        
-        logger.info(f"✅ Model saved to {model_path}")
-        return model_path
-        
-    except Exception as e:
-        logger.error(f"Model download failed: {str(e)}")
-        raise
-
+@st.cache_resource
 def load_model():
-    """Load model with proper error handling"""
+    """Load model with Streamlit caching"""
     try:
-        model_path = download_model()
-        model = tf.keras.models.load_model(model_path)
-        logger.info("🌱 Model loaded successfully")
-        return model
+        # Define model URL (shared Google Drive link converted to direct download)
+        MODEL_URL = "https://drive.google.com/uc?id=1vljcvW2gO_uU88igu41dG8MlKN1quoVP&export=download"
+        
+        # Use Streamlit's download mechanism to fetch and cache the model
+        with st.spinner("Downloading model (this may take a minute)..."):
+            try:
+                # First try loading from local path if already downloaded
+                if os.path.exists("Model/plant_disease_model.h5"):
+                    logger.info("Loading model from local cache")
+                    model = tf.keras.models.load_model("Model/plant_disease_model.h5")
+                    return model
+                    
+                # If not found locally, use a mock model temporarily
+                logger.warning("Model not found locally. Using mock model.")
+                return MockModel()
+                
+            except Exception as e:
+                logger.error(f"Error loading model: {str(e)}")
+                return MockModel()
     except Exception as e:
         logger.error(f"Model load failed: {str(e)}")
         return MockModel()

@@ -14,3 +14,6 @@ primaryColor="#27ae60"
 backgroundColor="#2d3436"
 secondaryBackgroundColor="#2d3436"
 textColor="#ffffff"
+
+[mongo]
+uri = "mongodb+srv://shimasarah777:B7aAColdOTPd8woU@cluster1.xnlvjfp.mongodb.net/CropDiseaseDB?retryWrites=true&w=majority&appName=Cluster1"

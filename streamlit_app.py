@@ -28,6 +28,10 @@ st.set_page_config(
     layout="wide"
 )
 
+# Display a notice if the model isn't available
+if not os.path.exists("Model/plant_disease_model.h5"):
+    st.warning("⚠️ Running in demo mode: Full model not available. For demonstration purposes only.")
+
 # Load CSS
 def inject_css():
     css_path = os.path.join(os.path.dirname(__file__), "styles.css")
@@ -39,10 +43,6 @@ inject_css()
 
 # Initialize DB
 initialize_db()
-
-@st.cache_resource
-def get_model():
-    return load_model()
 
 # ================
 # SESSION STATE
@@ -58,13 +58,7 @@ if 'logged_in' not in st.session_state:
 
 if 'model' not in st.session_state:
     with st.spinner("🌱 Loading disease detection model..."):
-        try:
-            st.session_state.model = get_model()
-        except Exception as e:
-            st.error(f"Failed to load model: {str(e)}")
-            # Create a mock model as a fallback
-            from model import MockModel
-            st.session_state.model = MockModel()
+        st.session_state.model = load_model()
 
 # ================
 # CORE FUNCTIONS
@@ -105,6 +99,28 @@ def process_image(image, source_type):
             st.metric("Confidence Level", f"{confidence:.0%}")
             display_disease_info(disease)
             
+            # Save result to database if logged in
+            if st.session_state.logged_in:
+                try:
+                    # Convert image to binary for storage
+                    img_bytes = BytesIO()
+                    if hasattr(image, 'getvalue'):
+                        img_bytes.write(image.getvalue())
+                    else:
+                        img = Image.open(image)
+                        img.save(img_bytes, format='JPEG')
+                    
+                    # Insert into database
+                    insert_upload({
+                        "user_id": st.session_state.user_id,
+                        "image_binary": img_bytes.getvalue(),
+                        "disease_prediction": disease,
+                        "confidence": confidence,
+                        "upload_date": datetime.datetime.now(datetime.UTC)
+                    })
+                except Exception as e:
+                    st.warning(f"Could not save result: {str(e)}")
+            
             # Feedback
             feedback = st.radio(
                 "Was this accurate?",
@@ -113,7 +129,7 @@ def process_image(image, source_type):
             )
             if feedback != "Select option":
                 insert_feedback({
-                    "user_id": st.session_state.user_id,
+                    "user_id": st.session_state.user_id if st.session_state.logged_in else "anonymous",
                     "prediction": disease,
                     "feedback": feedback,
                     "timestamp": datetime.datetime.now(datetime.UTC)
@@ -275,7 +291,7 @@ else:
         uploads = get_user_uploads(st.session_state.user_id, limit=3)
         if uploads:
             for upload in uploads:
-                with st.expander(f"{upload['disease_prediction']} ({upload['confidence']:.0%})"):
+                with st.expander(f"{upload.get('disease_prediction', 'Unknown')} ({upload.get('confidence', 0):.0%})"):
                     try:
                         st.image(upload['image'], use_container_width=True)
                     except:
