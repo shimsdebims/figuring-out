@@ -59,28 +59,24 @@ def is_plant_image(image):
 @st.cache_resource
 def load_model():
     """Load model with Streamlit caching"""
+    MODEL_URL = "https://github.com/yourusername/yourrepo/releases/download/v1.0/plant_disease_model.zip"
+    MODEL_PATH = "Model/plant_disease_model.h5"
+    
     try:
-        # Define model URL (shared Google Drive link converted to direct download)
-        MODEL_URL = "https://drive.google.com/uc?id=1vljcvW2gO_uU88igu41dG8MlKN1quoVP&export=download"
-        
-        # Use Streamlit's download mechanism to fetch and cache the model
-        with st.spinner("Downloading model (this may take a minute)..."):
-            try:
-                # First try loading from local path if already downloaded
-                if os.path.exists("Model/plant_disease_model.h5"):
-                    logger.info("Loading model from local cache")
-                    model = tf.keras.models.load_model("Model/plant_disease_model.h5")
-                    return model
-                    
-                # If not found locally, use a mock model temporarily
-                logger.warning("Model not found locally. Using mock model.")
-                return MockModel()
-                
-            except Exception as e:
-                logger.error(f"Error loading model: {str(e)}")
-                return MockModel()
+        # Check if model exists locally
+        if os.path.exists(MODEL_PATH):
+            return tf.keras.models.load_model(MODEL_PATH)
+            
+        # Download and extract if not
+        os.makedirs("Model", exist_ok=True)
+        with st.spinner("Downloading model..."):
+            # Download logic here (use urllib or requests)
+            # Extract the ZIP file
+            # Save to MODEL_PATH
+            
+            return tf.keras.models.load_model(MODEL_PATH)
     except Exception as e:
-        logger.error(f"Model load failed: {str(e)}")
+        st.error(f"Failed to load model: {str(e)}")
         return MockModel()
 
 def predict_disease(image_input):
