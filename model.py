@@ -11,7 +11,6 @@ import cv2
 import streamlit as st
 import tensorflow as tf
 from io import BytesIO
-import gdown
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +24,31 @@ try:
 except Exception as e:
     logger.error(f"Error loading disease info: {str(e)}")
     CLASS_NAMES = ["Healthy"]
+
+def is_plant_image(image):
+    """Verify image contains plant material using color analysis"""
+    try:
+        # Convert various input types to numpy array
+        if isinstance(image, bytes):
+            img_array = np.array(Image.open(BytesIO(image)))
+        elif hasattr(image, 'read'):
+            img_array = np.array(Image.open(image))
+        else:
+            img_array = np.array(Image.open(BytesIO(image.getvalue())))
+            
+        if len(img_array.shape) != 3 or img_array.shape[2] != 3:
+            return False
+            
+        # Convert to HSV and detect green pixels
+        hsv = cv2.cvtColor(img_array, cv2.COLOR_RGB2HSV)
+        lower_green = np.array([35, 50, 50])
+        upper_green = np.array([85, 255, 255])
+        mask = cv2.inRange(hsv, lower_green, upper_green)
+        green_percentage = np.mean(mask > 0)
+        return green_percentage > 0.25
+    except Exception as e:
+        logger.warning(f"Plant verification failed: {str(e)}")
+        return False
 
 class MockModel:
     """Fallback mock model with realistic predictions"""
