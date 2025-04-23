@@ -76,42 +76,54 @@ def display_disease_info(disease):
 
 def process_image(image, source_type):
     """Handle image prediction"""
-    if not is_plant_image(image):
-        st.error("Please upload a clear photo of a plant leaf.")
-        return
+    try:
+        # Convert the uploaded file to bytes if it's not already
+        if hasattr(image, 'read'):
+            image_bytes = image.read()
+        else:
+            image_bytes = image.getvalue()
+            
+        # Convert to PIL Image for verification
+        pil_image = Image.open(BytesIO(image_bytes))
         
-    with st.spinner("🔍 Analyzing..."):
-        disease, confidence = predict_disease(image)
-        
-        # Save to database
-        upload_data = {
-            "user_id": st.session_state.user_id,
-            "image": image.getvalue(),
-            "disease_prediction": disease,
-            "confidence": confidence,
-            "upload_date": datetime.datetime.now(datetime.UTC),
-            "source": source_type
-        }
-        insert_upload(upload_data)
-        
-        # Display results
-        st.success(f"🔬 Detection Result: **{disease}**")
-        st.metric("Confidence Level", f"{confidence:.0%}")
-        display_disease_info(disease)
-        
-        # Feedback
-        feedback = st.radio(
-            "Was this accurate?",
-            ["Select option", "👍 Accurate", "👎 Inaccurate"],
-            key=f"feedback_{source_type}"
-        )
-        if feedback != "Select option":
-            insert_feedback({
+        if not is_plant_image(pil_image):
+            st.error("Please upload a clear photo of a plant leaf.")
+            return
+            
+        with st.spinner("🔍 Analyzing..."):
+            disease, confidence = predict_disease(BytesIO(image_bytes))
+            
+            # Save to database
+            upload_data = {
                 "user_id": st.session_state.user_id,
-                "prediction": disease,
-                "feedback": feedback,
-                "timestamp": datetime.datetime.now(datetime.UTC)
-            })
+                "image": image_bytes,
+                "disease_prediction": disease,
+                "confidence": confidence,
+                "upload_date": datetime.datetime.now(datetime.UTC),
+                "source": source_type
+            }
+            insert_upload(upload_data)
+            
+            # Display results
+            st.success(f"🔬 Detection Result: **{disease}**")
+            st.metric("Confidence Level", f"{confidence:.0%}")
+            display_disease_info(disease)
+            
+            # Feedback
+            feedback = st.radio(
+                "Was this accurate?",
+                ["Select option", "👍 Accurate", "👎 Inaccurate"],
+                key=f"feedback_{source_type}"
+            )
+            if feedback != "Select option":
+                insert_feedback({
+                    "user_id": st.session_state.user_id,
+                    "prediction": disease,
+                    "feedback": feedback,
+                    "timestamp": datetime.datetime.now(datetime.UTC)
+                })
+    except Exception as e:
+        st.error(f"Error processing image: {str(e)}")
 
 # ================
 # USER SETTINGS
@@ -146,20 +158,33 @@ def show_user_settings():
             clear_user_uploads(st.session_state.user_id)
             st.success("Upload history cleared!")
     
-    with st.container(border=True, className="danger-zone"):
-        st.subheader("🚨 Danger Zone")
-        st.warning("These actions are irreversible")
-        
-        with st.form("delete_account"):
-            password = st.text_input("Confirm Password", type="password")
-            if st.form_submit_button("❌ Delete My Account", type="primary"):
-                user = find_user_by_username(st.session_state.username)
-                if user and user["password"] == hash_password(password):
-                    delete_user_account(st.session_state.user_id)
-                    st.session_state.logged_in = False
-                    st.rerun()
-                else:
-                    st.error("Incorrect password")
+    # Danger zone with custom styling
+    st.markdown("""
+    <style>
+    .danger-zone {
+        border: 1px solid #ff4d4d;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="danger-zone">', unsafe_allow_html=True)
+    st.subheader("🚨 Danger Zone")
+    st.warning("These actions are irreversible")
+    
+    with st.form("delete_account"):
+        password = st.text_input("Confirm Password", type="password")
+        if st.form_submit_button("❌ Delete My Account", type="primary"):
+            user = find_user_by_username(st.session_state.username)
+            if user and user["password"] == hash_password(password):
+                delete_user_account(st.session_state.user_id)
+                st.session_state.logged_in = False
+                st.rerun()
+            else:
+                st.error("Incorrect password")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ================
 # MAIN APP LAYOUT
