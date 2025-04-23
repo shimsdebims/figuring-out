@@ -59,24 +59,43 @@ def is_plant_image(image):
 @st.cache_resource
 def load_model():
     """Load model with Streamlit caching"""
-    MODEL_URL = "https://github.com/yourusername/yourrepo/releases/download/v1.0/plant_disease_model.zip"
+    MODEL_URL = "https://drive.google.com/uc?id=1vljcvW2gO_uU88igu41dG8MlKN1quoVP&export=download"
     MODEL_PATH = "Model/plant_disease_model.h5"
     
     try:
-        # Check if model exists locally
+        # 1. Check if model exists locally
         if os.path.exists(MODEL_PATH):
+            logger.info("Loading model from local cache")
             return tf.keras.models.load_model(MODEL_PATH)
             
-        # Download and extract if not
+        # 2. Download from Google Drive if not found locally
         os.makedirs("Model", exist_ok=True)
-        with st.spinner("Downloading model..."):
-            # Download logic here (use urllib or requests)
-            # Extract the ZIP file
-            # Save to MODEL_PATH
+        with st.spinner("Downloading model (this may take a few minutes)..."):
+            import requests
+            import gdown
             
-            return tf.keras.models.load_model(MODEL_PATH)
+            # Method 1: Using gdown (best for Google Drive)
+            output = "Model/model_temp.h5"
+            gdown.download(MODEL_URL, output, quiet=False)
+            
+            # Verify download completed
+            if os.path.exists(output):
+                os.rename(output, MODEL_PATH)
+                return tf.keras.models.load_model(MODEL_PATH)
+            
+            # Fallback method using requests (if gdown fails)
+            response = requests.get(MODEL_URL, stream=True)
+            if response.status_code == 200:
+                with open(MODEL_PATH, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                return tf.keras.models.load_model(MODEL_PATH)
+                
+        raise Exception("Download failed - no model file received")
+        
     except Exception as e:
-        st.error(f"Failed to load model: {str(e)}")
+        logger.error(f"Model load failed: {str(e)}")
+        st.error("⚠️ Failed to load disease detection model. Using limited demo mode.")
         return MockModel()
 
 def predict_disease(image_input):
