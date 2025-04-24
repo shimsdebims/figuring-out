@@ -45,7 +45,7 @@ def is_plant_image(image):
         upper_green = np.array([85, 255, 255])
         mask = cv2.inRange(hsv, lower_green, upper_green)
         green_percentage = np.mean(mask > 0)
-        return green_percentage > 0.25
+        return green_percentage > 0.15
     except Exception as e:
         logger.warning(f"Plant verification failed: {str(e)}")
         return False
