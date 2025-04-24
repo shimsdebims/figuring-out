@@ -32,23 +32,6 @@ def find_user_by_username(username):
     """Find user by username"""
     return db.users.find_one({"username": username})
 
-def find_user_by_id(user_id):
-    """Find user by ID"""
-    try:
-        return db.users.find_one({"_id": ObjectId(user_id)})
-    except Exception as e:
-        print(f"Error finding user by ID: {str(e)}")
-        return None
-
-def insert_user(user_data):
-    """Insert new user into database"""
-    try:
-        result = db.users.insert_one(user_data)
-        return True, str(result.inserted_id)
-    except DuplicateKeyError:
-        return False, "Username already exists"
-    except Exception as e:
-        return False, str(e)
 
 def insert_user(user_data):
     """Insert new user into database"""

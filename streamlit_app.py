@@ -17,7 +17,7 @@ from database import (
     find_user_by_username  
 )
 import time
-from model import predict_disease, load_model, is_plant_image, test_model_sample
+from model import predict_disease, load_model, is_plant_image
 
 # ================
 # APP CONFIG
@@ -29,7 +29,7 @@ st.set_page_config(
 )
 
 # Display a notice if the model isn't available
-if not os.path.exists("Model/plant_disease_model.tflite"):
+if not os.path.exists("Model/plant_disease_model.h5"):
     st.warning("⚠️ Running in demo mode: Full model not available. For demonstration purposes only.")
 
 # Load CSS
@@ -53,8 +53,7 @@ if 'logged_in' not in st.session_state:
         'username': None,
         'user_id': None,
         'camera_on': False,
-        'current_tab': "Home",
-        'debug_mode': False
+        'current_tab': "Home"
     })
 
 if 'model' not in st.session_state:
@@ -85,11 +84,7 @@ def display_disease_info(disease):
 
 def process_image(image, source_type):
     try:
-        # Check if we should skip the plant verification
-        skip_plant_check = st.session_state.get('skip_plant_check', False)
-        
-        # Check if image contains plant material
-        if not skip_plant_check and not is_plant_image(image):
+        if not is_plant_image(image):
             st.error("❌ Please upload a clear photo of a plant leaf")
             return
             
@@ -145,6 +140,30 @@ def process_image(image, source_type):
 # ================
 # USER SETTINGS
 # ================
+# def show_user_settings():
+#     """User account management section"""
+#     st.header("⚙️ Account Settings")
+    
+#     with st.expander("🔒 Change Password"):
+#         with st.form("change_password"):
+#             current = st.text_input("Current Password", type="password")
+#             new = st.text_input("New Password", type="password")
+#             confirm = st.text_input("Confirm New Password", type="password")
+            
+#             if st.form_submit_button("Update Password"):
+#                 user = find_user_by_username(st.session_state.username)
+#                 if user and user["password"] == hash_password(current):
+#                     is_strong, msg = is_strong_password(new)
+#                     if not is_strong:
+#                         st.error(msg)
+#                     elif new != confirm:
+#                         st.error("Passwords don't match")
+#                     else:
+#                         update_user_password(st.session_state.user_id, hash_password(new))
+#                         st.success("Password updated successfully!")
+#                 else:
+#                     st.error("Current password is incorrect")
+
 def show_user_settings():
     """User account management section"""
     st.header("⚙️ Account Settings")
@@ -174,6 +193,7 @@ def show_user_settings():
         if st.button("Clear All Uploads", key="clear_uploads"):
             clear_user_uploads(st.session_state.user_id)
             st.success("Upload history cleared!")
+
     
     # Danger zone with custom styling
     st.markdown("""
@@ -207,17 +227,6 @@ def show_user_settings():
 # MAIN APP LAYOUT
 # ================
 st.title("🍃 CropGuard - Plant Disease Detection")
-
-# Admin/Debug Settings for easy access in any mode
-with st.sidebar.expander("🛠️ Advanced Settings", expanded=False):
-    st.session_state.debug_mode = st.checkbox("Enable Debug Mode", value=st.session_state.get('debug_mode', False))
-    st.session_state.skip_plant_check = st.checkbox("Skip Plant Verification", value=st.session_state.get('skip_plant_check', False))
-    
-    if st.session_state.debug_mode:
-        st.write("### Model Test")
-        if st.button("Test Model with Sample Image"):
-            test_result = test_model_sample()
-            st.info(test_result)
 
 # Home Page (Before Login)
 if not st.session_state.logged_in:

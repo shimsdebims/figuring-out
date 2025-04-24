@@ -52,8 +52,7 @@ def login_user(username, password):
 
 def update_user_password(user_id, current_password, new_password):
     """Secure password update with validation"""
-    from database import find_user_by_id, db
-    from bson.objectid import ObjectId
+    from database import find_user_by_id
     
     # 1. Verify current password
     user = find_user_by_id(user_id)
@@ -67,8 +66,9 @@ def update_user_password(user_id, current_password, new_password):
     
     # 3. Update password
     try:
+        from database import db
         db.users.update_one(
-            {"_id": ObjectId(user_id)},
+            {"_id": user["_id"]},
             {"$set": {"password": hash_password(new_password)}}
         )
         return True, "Password updated successfully"
