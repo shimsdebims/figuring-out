@@ -1,13 +1,23 @@
-Structure
-my_crop_disease_app/
-├── streamlit_app.py
-├── database.py
-├── model.py
-├── auth.py
-├── styles.css
-├── uploads/
-├── Model/
-│   └── crop_model.h5
-├── disease_info.json
-├── requirements.txt
-└── README.md
+Project Structure
+cropguard/
+├── streamlit_app.py              # Main Streamlit application
+├── model.py                      # AI model handling code
+├── database.py                   # MongoDB database operations
+├── auth.py                       # Authentication functions
+├── disease_info.json             # Disease information database
+├── styles.css                    # Custom CSS styling
+├── .env                          # Environment variables (MongoDB credentials)
+├── .gitignore                    # Git ignore file
+├── .gitattributes                # Git LFS configuration
+├── .streamlit/                   # Streamlit configuration
+│   └── config.toml               # Streamlit configuration
+├── requirements.txt              # Python dependencies
+├── packages.txt                  # System dependencies
+├── runtime.txt                   # Python version specification
+├── README.md                     # Project documentation
+├── Model/                        # Model directory
+│   └── plant_disease_model.tflite  # TensorFlow Lite model file (LFS)
+└── Assets/                       # Example images and other assets
+    ├── PotatoHealthy(2161).JPG
+    ├── TomatoSeptoriaLeafSpot(3628).JPG
+    └── CornCommonRust(3279).JPG
