@@ -194,21 +194,6 @@ def show_user_settings():
             clear_user_uploads(st.session_state.user_id)
             st.success("Upload history cleared!")
 
-    with st.form("change_password"):
-        current = st.text_input("Current Password", type="password")
-        new = st.text_input("New Password", type="password")
-        confirm = st.text_input("Confirm New Password", type="password")
-    
-        if st.form_submit_button("Update Password"):
-            success, message = update_user_password(
-                st.session_state.user_id,
-                current,
-                new
-            )
-            if success:
-                st.success(message)
-            else:
-                st.error(message)
     
     # Danger zone with custom styling
     st.markdown("""
