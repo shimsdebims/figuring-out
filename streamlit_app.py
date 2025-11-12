@@ -29,8 +29,8 @@ st.set_page_config(
 )
 
 # Display a notice if the model isn't available
-if not os.path.exists("Model/plant_disease_model.h5"):
-    st.warning("⚠️ Running in demo mode: Full model not available. For demonstration purposes only.")
+if not os.path.exists("Model/mobilenet_v2_plantvillage.h5"):
+    st.info("🌱 Model will be downloaded on first use (may take 1-2 minutes)")
 
 # Load CSS
 def inject_css():
@@ -79,6 +79,15 @@ def display_disease_info(disease):
                 <p><strong>🔍 Fun Fact:</strong> {info['fun_fact']}</p>
             </div>
             """, unsafe_allow_html=True)
+        else:
+            # Disease not in our database (e.g., unmapped PlantVillage class)
+            st.warning(f"⚠️ Detected disease: **{disease}**")
+            st.info("""
+            This disease is not in our supported crop list (Tomato, Potato, Corn, Rice). 
+            The detection may be accurate, but we don't have treatment information for it.
+            
+            **Supported crops:** Tomato, Potato, Corn, Rice
+            """)
     except Exception as e:
         st.error(f"Could not load disease info: {str(e)}")
 
@@ -94,9 +103,27 @@ def process_image(image, source_type):
             if disease == "Error":
                 st.error("Analysis failed. Please try another image.")
                 return
-                
-            st.success(f"🔬 Detection Result: **{disease}**")
+            
+            # Display result with confidence-based styling
+            if confidence >= 0.7:
+                st.success(f"🔬 Detection Result: **{disease}**")
+            elif confidence >= 0.5:
+                st.warning(f"🔬 Detection Result: **{disease}** (Medium confidence)")
+            else:
+                st.error(f"🔬 Detection Result: **{disease}** (Low confidence - consider retaking photo)")
+            
             st.metric("Confidence Level", f"{confidence:.0%}")
+            
+            # Add interpretation guide
+            if confidence < 0.6:
+                st.info("""
+                💡 **Tips for better results:**
+                - Ensure good lighting
+                - Focus on the affected leaf area
+                - Avoid blurry or dark images
+                - Make sure the plant fills most of the frame
+                """)
+            
             display_disease_info(disease)
             
             # Save result to database if logged in
