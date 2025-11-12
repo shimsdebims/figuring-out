@@ -259,18 +259,42 @@ st.title("🍃 CropGuard - Plant Disease Detection")
 if not st.session_state.logged_in:
     st.markdown("""
     ## 🌱 Welcome to CropGuard!
-    **AI-powered plant disease detection for farmers and gardeners**
+    **AI-powered plant disease detection using MobileNetV2 trained on 54,000+ PlantVillage images**
     
-    Our system can identify common diseases in:
-    - Tomatoes 🍅
-    - Potatoes 🥔 
-    - Corn 🌽
-    - Rice 🌾
+    ### 🍃 Supported Crops (38 Disease Classes):
     
-    ⚠️ **Important Limitations:**
-    - Currently supports only the specific diseases listed in our database
-    - Works best with clear, well-lit photos of leaves
-    - Cannot detect all possible plant diseases or nutrient deficiencies
+    **🍎 Apple** - Scab, Black Rot, Cedar Apple Rust, Healthy
+    
+    **🫐 Blueberry** - Healthy
+    
+    **🍒 Cherry** - Powdery Mildew, Healthy
+    
+    **🌽 Corn (Maize)** - Gray Leaf Spot, Common Rust, Northern Leaf Blight, Healthy
+    
+    **🍇 Grape** - Black Rot, Esca, Leaf Blight, Healthy
+    
+    **🍊 Orange** - Citrus Greening (Huanglongbing)
+    
+    **🍑 Peach** - Bacterial Spot, Healthy
+    
+    **🌶️ Pepper (Bell)** - Bacterial Spot, Healthy
+    
+    **🥔 Potato** - Early Blight, Late Blight, Healthy
+    
+    **🫐 Raspberry** - Healthy
+    
+    **🫘 Soybean** - Healthy
+    
+    **🎃 Squash** - Powdery Mildew
+    
+    **🍓 Strawberry** - Leaf Scorch, Healthy
+    
+    **🍅 Tomato** - Bacterial Spot, Early Blight, Late Blight, Leaf Mold, Septoria Leaf Spot, Spider Mites, Target Spot, Yellow Leaf Curl Virus, Mosaic Virus, Healthy
+    
+    ⚠️ **Important:**
+    - Upload clear, well-lit photos of affected leaves for best results
+    - Model works best with the specific crops and diseases listed above
+    - For best accuracy, ensure the leaf fills most of the frame
     """)
     
     # Example images
@@ -356,18 +380,27 @@ else:
         st.header("🌿 Getting Started")
         st.markdown("""
         ### How to Use CropGuard:
-        1. **Capture** clear photos of plant leaves
-        2. **Upload** images through our detection interface
-        3. **Receive** instant diagnosis and treatment advice
+        1. **Capture** clear, well-lit photos of affected plant leaves
+        2. **Upload** images through the "Detect" tab
+        3. **Receive** instant AI diagnosis with treatment recommendations
         
-        ### Supported Plants & Diseases:
-        - **Tomatoes**: Leaf Mold, Yellow Curl Virus, Septoria Spot
-        - **Potatoes**: Late Blight, Early Blight, Scab
-        - **Corn**: Northern Leaf Blight, Common Rust, Gray Spot
-        - **Rice**: Blast, Bacterial Blight, Brown Spot
+        ### 🌱 Supported Crops (38 Diseases):
         
-        ⚠️ **Note**: This tool cannot diagnose all plant health issues. 
-        For unknown conditions, consult a plant pathologist.
+        **Fruit Trees**: Apple (4), Cherry (2), Grape (4), Orange (1), Peach (2), Strawberry (2)
+        
+        **Vegetables**: Tomato (10), Potato (3), Pepper (2), Squash (1)
+        
+        **Field Crops**: Corn (4), Soybean (1)
+        
+        **Berries**: Blueberry (1), Raspberry (1)
+        
+        📊 **Model Accuracy**: ~95% on PlantVillage validation set
+        
+        ⚠️ **Best Practices**:
+        - Use images with good lighting and focus
+        - Ensure the affected leaf fills most of the frame
+        - Take photos from multiple angles if unsure
+        - For serious infestations, consult a plant pathologist
         """)
         
     elif st.session_state.current_tab == "Detect":

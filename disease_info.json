@@ -1,82 +1,192 @@
 {
-    "Tomato - Healthy": {
+    "Apple___Apple_scab": {
+        "symptoms": "Dark, scabby lesions on leaves, fruit, and twigs. Leaves may become distorted and fall prematurely.",
+        "treatment": "Apply fungicides during wet weather. Remove infected leaves and fruit. Plant resistant varieties.",
+        "fun_fact": "Apple scab is caused by the fungus Venturia inaequalis and thrives in cool, wet conditions."
+    },
+    "Apple___Black_rot": {
+        "symptoms": "Brown, circular spots on leaves. Rotted areas on fruit with concentric rings. Cankers on branches.",
+        "treatment": "Prune infected branches. Apply fungicides. Remove mummified fruits from trees.",
+        "fun_fact": "Black rot can cause fruit to completely rot and mummify on the tree."
+    },
+    "Apple___Cedar_apple_rust": {
+        "symptoms": "Bright orange or yellow spots on leaves. Galls form on cedar trees in winter.",
+        "treatment": "Remove nearby cedar trees. Apply fungicides in spring. Plant resistant apple varieties.",
+        "fun_fact": "This disease requires both apple and cedar trees to complete its life cycle."
+    },
+    "Apple___healthy": {
         "symptoms": "No visible symptoms.",
-        "treatment": "Maintain proper watering and fertilization.",
-        "fun_fact": "Tomatoes are technically a fruit, not a vegetable!"
+        "treatment": "Maintain proper watering, fertilization, and pruning practices.",
+        "fun_fact": "Apples are members of the rose family (Rosaceae)."
     },
-    "Tomato - Leaf Mold": {
-        "symptoms": "Yellow spots on leaves, leading to defoliation.",
-        "treatment": "Apply fungicides and improve air circulation.",
-        "fun_fact": "Leaf mold thrives in humid conditions."
-    },
-    "Tomato - Yellow Leaf Curl Virus": {
-        "symptoms": "Yellowing and curling of leaves, stunted growth.",
-        "treatment": "Control whiteflies and remove infected plants.",
-        "fun_fact": "This virus is spread by whiteflies."
-    },
-    "Tomato - Septoria Leaf Spot": {
-        "symptoms": "Small, circular spots with gray centers on leaves.",
-        "treatment": "Remove infected leaves and apply fungicides.",
-        "fun_fact": "Septoria Leaf Spot can reduce tomato yields by up to 50%."
-    },
-    "Potato - Healthy": {
+    "Blueberry___healthy": {
         "symptoms": "No visible symptoms.",
-        "treatment": "Maintain proper soil moisture and fertilization.",
-        "fun_fact": "Potatoes are the world’s fourth-largest food crop."
+        "treatment": "Maintain acidic soil (pH 4.5-5.5) and consistent moisture.",
+        "fun_fact": "Blueberries are one of the few naturally blue foods."
     },
-    "Potato - Late Blight": {
-        "symptoms": "Dark lesions on leaves and stems, rapid plant death.",
-        "treatment": "Apply fungicides and remove infected plants.",
-        "fun_fact": "Late blight caused the Irish Potato Famine in the 1840s."
+    "Cherry_(including_sour)___Powdery_mildew": {
+        "symptoms": "White, powdery fungal growth on leaves, shoots, and fruit. Leaves may curl and become distorted.",
+        "treatment": "Apply sulfur or fungicides. Prune for better air circulation. Remove infected plant parts.",
+        "fun_fact": "Powdery mildew can spread rapidly in warm, dry climates with high humidity at night."
     },
-    "Potato - Early Blight": {
-        "symptoms": "Concentric rings on leaves, reduced yield.",
-        "treatment": "Apply fungicides and rotate crops.",
-        "fun_fact": "Early blight is more common in warm, wet climates."
-    },
-    "Potato - Scab": {
-        "symptoms": "Rough, scabby lesions on tubers.",
-        "treatment": "Maintain soil pH and rotate crops.",
-        "fun_fact": "Potato scab makes tubers unmarketable but doesn’t affect taste."
-    },
-    "Corn - Healthy": {
+    "Cherry_(including_sour)___healthy": {
         "symptoms": "No visible symptoms.",
-        "treatment": "Maintain proper watering and fertilization.",
-        "fun_fact": "Corn is used in over 4,000 products, from food to fuel."
+        "treatment": "Maintain proper watering and fertilization. Prune to improve air circulation.",
+        "fun_fact": "Cherries contain melatonin, which may help regulate sleep patterns."
     },
-    "Corn - Northern Leaf Blight": {
-        "symptoms": "Long, grayish lesions on leaves, reduced photosynthesis.",
-        "treatment": "Apply fungicides and rotate crops.",
-        "fun_fact": "Northern Leaf Blight can reduce corn yields by up to 30%."
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
+        "symptoms": "Rectangular, gray to tan lesions on leaves between leaf veins. Lesions may merge causing leaf death.",
+        "treatment": "Apply fungicides. Rotate crops. Use resistant hybrids. Till crop residue into soil.",
+        "fun_fact": "Gray leaf spot is more severe in conservation tillage systems where corn residue remains on the surface."
     },
-    "Corn - Common Rust": {
-        "symptoms": "Reddish-brown pustules on leaves.",
-        "treatment": "Apply fungicides and plant resistant varieties.",
-        "fun_fact": "Common rust appears as reddish-brown pustules on leaves."
+    "Corn_(maize)___Common_rust_": {
+        "symptoms": "Small, circular to elongate reddish-brown pustules on both leaf surfaces. Leaves may yellow and die early.",
+        "treatment": "Plant resistant hybrids. Apply fungicides if necessary. Remove infected plant debris.",
+        "fun_fact": "Common rust pustules can produce millions of spores that spread by wind."
     },
-    "Corn - Gray Leaf Spot": {
-        "symptoms": "Rectangular lesions on leaves, reduced yield.",
-        "treatment": "Apply fungicides and rotate crops.",
-        "fun_fact": "Gray Leaf Spot is more severe in conservation tillage systems."
+    "Corn_(maize)___Northern_Leaf_Blight": {
+        "symptoms": "Long, elliptical gray-green lesions on leaves. Lesions can be 1-6 inches long.",
+        "treatment": "Use resistant hybrids. Apply fungicides. Rotate crops. Bury crop debris.",
+        "fun_fact": "Northern Leaf Blight can reduce corn yields by up to 30% in susceptible varieties."
     },
-    "Rice - Healthy": {
+    "Corn_(maize)___healthy": {
         "symptoms": "No visible symptoms.",
-        "treatment": "Maintain proper water levels and fertilization.",
-        "fun_fact": "Rice feeds over half of the world’s population."
+        "treatment": "Maintain proper watering and fertilization. Monitor for pests and diseases.",
+        "fun_fact": "Corn is used in over 4,000 products, from food to fuel and plastics."
     },
-    "Rice - Blast": {
-        "symptoms": "Diamond-shaped lesions on leaves.",
-        "treatment": "Apply fungicides and plant resistant varieties.",
-        "fun_fact": "Rice blast can cause yield losses of up to 100%."
+    "Grape___Black_rot": {
+        "symptoms": "Circular brown spots on leaves with dark borders. Fruit develops light brown spots that turn into black, shriveled mummies.",
+        "treatment": "Remove mummified fruit. Apply fungicides. Prune for air circulation. Remove infected leaves.",
+        "fun_fact": "Black rot mummies can harbor the fungus for up to two years."
     },
-    "Rice - Bacterial Leaf Blight": {
-        "symptoms": "Yellow streaks on leaves, reduced photosynthesis.",
-        "treatment": "Apply bactericides and remove infected plants.",
-        "fun_fact": "Bacterial Leaf Blight spreads through water and wind."
+    "Grape___Esca_(Black_Measles)": {
+        "symptoms": "Tiger-stripe patterns on leaves. Dark streaking in wood. Berries may show dark spots.",
+        "treatment": "Prune infected wood. No effective fungicides available. Remove severely infected vines.",
+        "fun_fact": "Esca is an ancient disease mentioned in Greek and Roman texts about viticulture."
     },
-    "Rice - Brown Spot": {
-        "symptoms": "Small, brown spots on leaves, reduced yield.",
-        "treatment": "Apply fungicides and improve soil conditions.",
-        "fun_fact": "Brown Spot is often associated with poor soil conditions."
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": {
+        "symptoms": "Small, angular brown spots on leaves. Spots may have yellow halos. Heavy infection causes defoliation.",
+        "treatment": "Apply fungicides. Remove infected leaves. Improve air circulation through pruning.",
+        "fun_fact": "This disease is most common in humid, tropical, and subtropical regions."
+    },
+    "Grape___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper pruning, watering, and fertilization practices.",
+        "fun_fact": "There are over 10,000 varieties of grapes worldwide."
+    },
+    "Orange___Haunglongbing_(Citrus_greening)": {
+        "symptoms": "Yellow shoots, mottled leaves, lopsided fruit with green ends. Fruit is bitter and drops prematurely.",
+        "treatment": "Remove infected trees immediately. Control psyllid insects. Plant disease-free nursery stock.",
+        "fun_fact": "Huanglongbing (HLB) is one of the most devastating citrus diseases and has no cure."
+    },
+    "Peach___Bacterial_spot": {
+        "symptoms": "Small, purple spots on leaves that become brown and fall out leaving holes. Fruit has raised dark spots.",
+        "treatment": "Apply copper sprays. Plant resistant varieties. Avoid overhead irrigation.",
+        "fun_fact": "Bacterial spot is spread by rain splash and can survive in leaf debris."
+    },
+    "Peach___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper pruning, thinning, and fertilization practices.",
+        "fun_fact": "Peaches are native to China and have been cultivated for over 4,000 years."
+    },
+    "Pepper,_bell___Bacterial_spot": {
+        "symptoms": "Small, raised brown spots on leaves and fruit. Spots may have yellow halos. Leaves may drop.",
+        "treatment": "Use disease-free seeds. Apply copper-based sprays. Rotate crops. Remove infected plants.",
+        "fun_fact": "Bacterial spot can survive in seed and plant debris for months."
+    },
+    "Pepper,_bell___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper watering and fertilization. Ensure good air circulation.",
+        "fun_fact": "Bell peppers are actually fruits, not vegetables, and contain more vitamin C than oranges."
+    },
+    "Potato___Early_blight": {
+        "symptoms": "Dark brown spots with concentric rings (target pattern) on older leaves. Leaves turn yellow and die.",
+        "treatment": "Apply fungicides. Rotate crops. Remove infected plant debris. Use certified disease-free seed potatoes.",
+        "fun_fact": "Early blight is more common in warm, humid weather and can reduce yields by 20-30%."
+    },
+    "Potato___Late_blight": {
+        "symptoms": "Water-soaked lesions on leaves that turn brown and black. White mold growth on undersides. Tubers develop brown rot.",
+        "treatment": "Apply fungicides preventatively. Remove infected plants immediately. Plant resistant varieties.",
+        "fun_fact": "Late blight caused the Irish Potato Famine in the 1840s, killing over 1 million people."
+    },
+    "Potato___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper soil moisture and fertilization. Use certified seed potatoes.",
+        "fun_fact": "Potatoes are the world's fourth-largest food crop after rice, wheat, and corn."
+    },
+    "Raspberry___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper watering, fertilization, and pruning practices.",
+        "fun_fact": "Raspberries are a rich source of antioxidants and vitamin C."
+    },
+    "Soybean___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper watering and fertilization. Monitor for pests.",
+        "fun_fact": "Soybeans are a complete protein source and contain all nine essential amino acids."
+    },
+    "Squash___Powdery_mildew": {
+        "symptoms": "White, powdery fungal growth on leaves and stems. Leaves may yellow and die prematurely.",
+        "treatment": "Apply fungicides or sulfur. Remove infected leaves. Plant resistant varieties. Improve air circulation.",
+        "fun_fact": "Powdery mildew can spread rapidly in warm, dry days and cool, humid nights."
+    },
+    "Strawberry___Leaf_scorch": {
+        "symptoms": "Purple to brown spots on leaves with reddish-purple borders. Leaf centers turn brown and die.",
+        "treatment": "Remove infected leaves. Apply fungicides. Plant resistant varieties. Avoid overhead irrigation.",
+        "fun_fact": "Leaf scorch is most severe during hot, dry weather."
+    },
+    "Strawberry___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper watering and fertilization. Mulch to prevent soil-borne diseases.",
+        "fun_fact": "Strawberries are the only fruit with seeds on the outside."
+    },
+    "Tomato___Bacterial_spot": {
+        "symptoms": "Small, dark brown spots on leaves with yellow halos. Raised spots on fruit. Severe defoliation may occur.",
+        "treatment": "Use disease-free seeds. Apply copper sprays. Rotate crops. Avoid overhead watering.",
+        "fun_fact": "Bacterial spot can reduce tomato yields by up to 50% in severe cases."
+    },
+    "Tomato___Early_blight": {
+        "symptoms": "Brown spots with concentric rings on lower leaves. Leaves yellow and drop. Dark lesions on stems and fruit.",
+        "treatment": "Apply fungicides. Remove infected leaves. Mulch to prevent soil splash. Rotate crops.",
+        "fun_fact": "Early blight is caused by the fungus Alternaria solani and is most common mid-season."
+    },
+    "Tomato___Late_blight": {
+        "symptoms": "Large, irregular brown lesions on leaves with white mold on undersides. Rapid plant death. Fruit develops brown, greasy spots.",
+        "treatment": "Apply fungicides preventatively. Remove infected plants. Avoid overhead watering. Plant resistant varieties.",
+        "fun_fact": "Late blight can destroy an entire tomato crop in days under favorable conditions."
+    },
+    "Tomato___Leaf_Mold": {
+        "symptoms": "Yellow spots on upper leaf surfaces. Olive-green to brown fuzzy mold on lower surfaces. Leaves curl and die.",
+        "treatment": "Improve air circulation. Apply fungicides. Remove infected leaves. Lower humidity in greenhouses.",
+        "fun_fact": "Leaf mold thrives in high humidity (above 85%) and is common in greenhouses."
+    },
+    "Tomato___Septoria_leaf_spot": {
+        "symptoms": "Small, circular spots with dark borders and gray centers on leaves. Tiny black dots (fungal bodies) visible in centers.",
+        "treatment": "Remove infected leaves. Apply fungicides. Mulch to prevent soil splash. Rotate crops.",
+        "fun_fact": "Septoria leaf spot can reduce tomato yields by up to 50% by causing severe defoliation."
+    },
+    "Tomato___Spider_mites Two-spotted_spider_mite": {
+        "symptoms": "Yellow stippling on leaves. Fine webbing on undersides. Leaves may bronze and drop. Severe infestations stunt growth.",
+        "treatment": "Spray with water to dislodge mites. Apply insecticidal soap or horticultural oil. Use predatory mites.",
+        "fun_fact": "Spider mites are arachnids (related to spiders), not insects, and thrive in hot, dry conditions."
+    },
+    "Tomato___Target_Spot": {
+        "symptoms": "Brown spots with concentric rings on leaves, stems, and fruit. Spots may have yellow halos.",
+        "treatment": "Apply fungicides. Remove infected plant parts. Improve air circulation. Avoid overhead watering.",
+        "fun_fact": "Target spot is caused by the fungus Corynespora cassiicola and is favored by warm, humid conditions."
+    },
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
+        "symptoms": "Severe leaf curling, yellowing, and stunted growth. Reduced fruit set. Plants appear bushy.",
+        "treatment": "Control whitefly vectors with insecticides. Remove infected plants. Use reflective mulches. Plant resistant varieties.",
+        "fun_fact": "This virus is spread exclusively by whiteflies and can devastate tomato crops."
+    },
+    "Tomato___Tomato_mosaic_virus": {
+        "symptoms": "Mottled light and dark green pattern on leaves. Leaf distortion. Fruit may have brown spots or uneven ripening.",
+        "treatment": "Remove infected plants. Disinfect tools. Use virus-free seeds. Control aphids. Wash hands after handling tobacco.",
+        "fun_fact": "Tomato mosaic virus can survive in soil and plant debris for up to 2 years."
+    },
+    "Tomato___healthy": {
+        "symptoms": "No visible symptoms.",
+        "treatment": "Maintain proper watering and fertilization. Provide support for vines.",
+        "fun_fact": "Tomatoes are technically a fruit and contain more genes than humans (31,000 vs 25,000)."
     }
 }
