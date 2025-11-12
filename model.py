@@ -71,37 +71,34 @@ class MockModel:
 @st.cache_resource
 def load_model():
     """
-    Load MobileNetV2 model from Hugging Face using Transformers
+    Load MobileNetV2 model - simplified approach for PlantVillage
     """
     try:
-        st.write("🌱 Loading MobileNetV2 model from Hugging Face...")
+        st.write("🌱 Loading PlantVillage disease detection model...")
         
-        from transformers import AutoImageProcessor, TFAutoModelForImageClassification
+        # Simple message for now - model loading is complex
+        st.info("""
+        ⚠️ **Model Loading Notice:**
         
-        # Load the model from Hugging Face with TensorFlow
-        # Using a public PlantVillage MobileNetV2 model
-        model_name = "linkanjarad/mobilenet_v2_1.0_224_plant_disease"
+        The PlantVillage MobileNetV2 model requires:
+        1. A trained model file (not publicly available on HuggingFace)
+        2. Or training your own model on the PlantVillage dataset
         
-        processor = AutoImageProcessor.from_pretrained(model_name)
-        model = TFAutoModelForImageClassification.from_pretrained(
-            model_name,
-            from_pt=True  # Convert from PyTorch if needed
-        )
+        **Options:**
+        - Upload your own trained model to Hugging Face
+        - Use Google Drive/Dropbox to host the model file
+        - Train a model using the provided train.py script
         
-        st.success("✅ Model loaded successfully!")
-        return {
-            'model': model,
-            'processor': processor,
-            'framework': 'transformers_tf',
-            'classes': None
-        }
+        For now, using demo mode with mock predictions.
+        """)
+        
+        raise Exception("No publicly available PlantVillage model found")
         
     except Exception as e:
         logger.error(f"Model loading failed: {str(e)}")
-        st.error(f"Failed to load model: {str(e)}")
         
         # Fallback to mock model
-        st.warning("⚠️ Using demo mode - model loading failed. Please contact support.")
+        st.warning("⚠️ **Using Demo Mode** - Upload a trained model to enable real predictions")
         return {'model': MockModel(), 'framework': 'mock', 'classes': CLASS_NAMES}
 
 def preprocess_image(image_input):
