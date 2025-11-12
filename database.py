@@ -11,9 +11,15 @@ from bson.objectid import ObjectId
 # Load environment variables
 load_dotenv()
 
+# Database connection - supports both Streamlit secrets and .env
+try:
+    import streamlit as st
+    # Try Streamlit secrets first (for cloud deployment)
+    MONGO_URI = st.secrets.get("MONGO_URI", os.getenv("MONGO_URI", "mongodb://localhost:27017"))
+except (ImportError, FileNotFoundError):
+    # Fall back to environment variables (for local development)
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 
-# Database connection
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 client = MongoClient(MONGO_URI)
 db = client["cropDiseaseDB"]
 
