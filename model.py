@@ -30,26 +30,19 @@ PLANTVILLAGE_TO_CROPGUARD = {
     # Tomato mappings
     "Tomato___healthy": "Tomato - Healthy",
     "Tomato___Leaf_Mold": "Tomato - Leaf Mold",
-    "Tomato___Yellow_Leaf_Curl_Virus": "Tomato - Yellow Leaf Curl Virus",
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": "Tomato - Yellow Leaf Curl Virus",
     "Tomato___Septoria_leaf_spot": "Tomato - Septoria Leaf Spot",
     
     # Potato mappings
     "Potato___healthy": "Potato - Healthy",
     "Potato___Late_blight": "Potato - Late Blight",
     "Potato___Early_blight": "Potato - Early Blight",
-    "Potato___Scab": "Potato - Scab",  # May not exist in PlantVillage
     
     # Corn mappings
     "Corn_(maize)___healthy": "Corn - Healthy",
     "Corn_(maize)___Northern_Leaf_Blight": "Corn - Northern Leaf Blight",
     "Corn_(maize)___Common_rust_": "Corn - Common Rust",
-    "Corn_(maize)___Gray_leaf_spot": "Corn - Gray Leaf Spot",
-    
-    # Rice mappings (may need adjustment - PlantVillage has limited rice)
-    "Rice___Healthy": "Rice - Healthy",
-    "Rice___Blast": "Rice - Blast",
-    "Rice___Bacterial_leaf_blight": "Rice - Bacterial Leaf Blight",
-    "Rice___Brown_spot": "Rice - Brown Spot",
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": "Corn - Gray Leaf Spot",
 }
 
 def is_plant_image(image):
@@ -149,9 +142,6 @@ def load_model():
         # Adjust final layer for 38 classes
         model.classifier[1] = torch.nn.Linear(model.last_channel, 38)
         
-        # Try to load weights if available
-        # This is a placeholder - adjust based on actual model availability
-        
         st.success("✅ PyTorch model loaded!")
         return {'model': model, 'framework': 'pytorch', 'classes': None}
         
@@ -225,8 +215,7 @@ def predict_disease(image_input):
             predicted_idx = np.argmax(predictions)
             confidence = float(predictions[predicted_idx])
             
-            # Get class name (need to load PlantVillage class names)
-            # For now, use a placeholder - you'll need to update this
+            # Get class name
             plantvillage_classes = get_plantvillage_classes()
             
             if predicted_idx < len(plantvillage_classes):

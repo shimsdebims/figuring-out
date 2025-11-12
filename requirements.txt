@@ -1,7 +1,7 @@
 # Core web framework
 streamlit==1.44.1
 
-# Deep Learning - TensorFlow (lighter than full TensorFlow)
+# Deep Learning - TensorFlow
 tensorflow>=2.16.1
 
 # Hugging Face for model downloading
