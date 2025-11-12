@@ -79,7 +79,8 @@ def load_model():
         from transformers import AutoImageProcessor, TFAutoModelForImageClassification
         
         # Load the model from Hugging Face with TensorFlow
-        model_name = "dima806/mobilenet_v2_1.0_224-plant-disease-identification"
+        # Using a public PlantVillage MobileNetV2 model
+        model_name = "linkanjarad/mobilenet_v2_1.0_224_plant_disease"
         
         processor = AutoImageProcessor.from_pretrained(model_name)
         model = TFAutoModelForImageClassification.from_pretrained(
