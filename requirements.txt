@@ -1,11 +1,10 @@
 # Core web framework
 streamlit==1.44.1
 
-# Deep Learning - TensorFlow
-tensorflow>=2.16.1
-
-# Hugging Face for model downloading
-huggingface-hub>=0.20.0
+# Machine Learning - Transformers & PyTorch
+transformers>=4.27.0
+torch>=2.0.0
+torchvision>=0.15.0
 
 # Database
 pymongo==4.6.1
@@ -20,6 +19,5 @@ numpy>=1.23.0
 pandas>=2.0.0
 
 # Additional utilities
-h5py==3.10.0
 requests==2.31.0
 tqdm==4.66.1

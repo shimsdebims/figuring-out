@@ -66,73 +66,36 @@ class MockModel:
 @st.cache_resource
 def load_model():
     """
-    Load MobileNetV2 model from Hugging Face
-    Tries multiple methods for maximum compatibility
+    Load MobileNetV2 model from Hugging Face using Transformers
     """
     try:
-        # Method 1: Try loading with TensorFlow/Keras
-        import tensorflow as tf
-        from tensorflow import keras
+        st.write("🌱 Loading MobileNetV2 model from Hugging Face...")
         
-        MODEL_DIR = "Model"
-        os.makedirs(MODEL_DIR, exist_ok=True)
-        
-        MODEL_PATH = os.path.join(MODEL_DIR, "mobilenet_v2_plantvillage.h5")
-        
-        # Check if model exists locally
-        if os.path.exists(MODEL_PATH):
-            st.toast("Loading model from cache", icon="✅")
-            model = keras.models.load_model(MODEL_PATH)
-            return {'model': model, 'framework': 'tensorflow', 'classes': None}
-        
-        # Try downloading from Hugging Face
-        st.write("🌱 Downloading MobileNetV2 model from Hugging Face...")
-        
-        try:
-            from huggingface_hub import hf_hub_download
-            
-            # Download model file
-            model_file = hf_hub_download(
-                repo_id="dima806/mobilenet_v2_1.0_224-plant-disease-identification",
-                filename="mobilenet_v2_1.0_224_plant_disease.h5",
-                cache_dir=MODEL_DIR
-            )
-            
-            # Load the model
-            model = keras.models.load_model(model_file)
-            
-            # Save to local cache
-            model.save(MODEL_PATH)
-            
-            st.success("✅ Model loaded successfully!")
-            return {'model': model, 'framework': 'tensorflow', 'classes': None}
-            
-        except Exception as e:
-            logger.error(f"Hugging Face download failed: {str(e)}")
-            
-    except ImportError:
-        logger.warning("TensorFlow not available, trying PyTorch...")
-    
-    try:
-        # Method 2: Try PyTorch
+        from transformers import AutoImageProcessor, AutoModelForImageClassification
         import torch
-        import torchvision.models as models
         
-        st.write("🌱 Loading PyTorch MobileNetV2...")
+        # Load the model from Hugging Face
+        model_name = "dima806/mobilenet_v2_1.0_224-plant-disease-identification"
         
-        model = models.mobilenet_v2(pretrained=False)
-        # Adjust final layer for 38 classes
-        model.classifier[1] = torch.nn.Linear(model.last_channel, 38)
+        processor = AutoImageProcessor.from_pretrained(model_name)
+        model = AutoModelForImageClassification.from_pretrained(model_name)
+        model.eval()  # Set to evaluation mode
         
-        st.success("✅ PyTorch model loaded!")
-        return {'model': model, 'framework': 'pytorch', 'classes': None}
+        st.success("✅ Model loaded successfully!")
+        return {
+            'model': model,
+            'processor': processor,
+            'framework': 'transformers',
+            'classes': None
+        }
         
     except Exception as e:
-        logger.error(f"PyTorch loading failed: {str(e)}")
-    
-    # Fallback to mock model
-    st.warning("⚠️ Using demo mode - install dependencies or check model availability")
-    return {'model': MockModel(), 'framework': 'mock', 'classes': CLASS_NAMES}
+        logger.error(f"Model loading failed: {str(e)}")
+        st.error(f"Failed to load model: {str(e)}")
+        
+        # Fallback to mock model
+        st.warning("⚠️ Using demo mode - install dependencies or check model availability")
+        return {'model': MockModel(), 'framework': 'mock', 'classes': CLASS_NAMES}
 
 def preprocess_image(image_input):
     """
@@ -171,42 +134,36 @@ def predict_disease(image_input):
         framework = model_info['framework']
         
         # Run inference based on framework
-        if framework == 'tensorflow':
-            import tensorflow as tf
-            
-            # Make prediction
-            predictions = model.predict(img_array, verbose=0)[0]
-            
-            # Get top prediction
-            predicted_idx = np.argmax(predictions)
-            confidence = float(predictions[predicted_idx])
-            
-            # Get class name directly from PlantVillage classes
-            plantvillage_classes = get_plantvillage_classes()
-            
-            if predicted_idx < len(plantvillage_classes):
-                disease = plantvillage_classes[predicted_idx]
-            else:
-                disease = f"Class_{predicted_idx}"
-            
-        elif framework == 'pytorch':
+        if framework == 'transformers':
             import torch
+            from transformers import AutoImageProcessor
             
-            # Convert to PyTorch tensor
-            img_tensor = torch.from_numpy(img_array).permute(0, 3, 1, 2)
+            # Get processor and model
+            processor = model_info['processor']
+            
+            # Convert image input to PIL Image
+            if isinstance(image_input, bytes):
+                img = Image.open(BytesIO(image_input))
+            elif hasattr(image_input, 'read'):
+                img = Image.open(image_input)
+            else:
+                img = Image.open(BytesIO(image_input.getvalue()))
+            
+            # Preprocess with the model's processor
+            inputs = processor(images=img, return_tensors="pt")
             
             # Make prediction
             with torch.no_grad():
-                predictions = model(img_tensor)[0]
-                predictions = torch.nn.functional.softmax(predictions, dim=0)
+                outputs = model(**inputs)
+                logits = outputs.logits
+                predictions = torch.nn.functional.softmax(logits, dim=-1)[0]
             
             # Get top prediction
             predicted_idx = torch.argmax(predictions).item()
             confidence = float(predictions[predicted_idx])
             
-            # Get class name directly
-            plantvillage_classes = get_plantvillage_classes()
-            disease = plantvillage_classes[predicted_idx]
+            # Get class name from model's config
+            disease = model.config.id2label[predicted_idx]
             
         elif framework == 'mock':
             # Mock model
