@@ -5,10 +5,9 @@ Supports both direct 16-class predictions and 38-class PlantVillage mapping
 
 import os
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageStat
 import logging
 import json
-import cv2
 import streamlit as st
 from io import BytesIO
 
@@ -28,29 +27,35 @@ except Exception as e:
 # No mapping needed - disease_info.json now uses PlantVillage class names directly
 
 def is_plant_image(image):
-    """Verify image contains plant material using color analysis"""
+    """Verify image contains plant material using basic checks"""
     try:
-        # Convert various input types to numpy array
+        # Convert various input types to PIL Image
         if isinstance(image, bytes):
-            img_array = np.array(Image.open(BytesIO(image)))
+            img = Image.open(BytesIO(image))
         elif hasattr(image, 'read'):
-            img_array = np.array(Image.open(image))
+            img = Image.open(image)
         else:
-            img_array = np.array(Image.open(BytesIO(image.getvalue())))
-            
-        if len(img_array.shape) != 3 or img_array.shape[2] != 3:
-            return False
-            
-        # Convert to HSV and detect green pixels
-        hsv = cv2.cvtColor(img_array, cv2.COLOR_RGB2HSV)
-        lower_green = np.array([35, 50, 50])
-        upper_green = np.array([85, 255, 255])
-        mask = cv2.inRange(hsv, lower_green, upper_green)
-        green_percentage = np.mean(mask > 0)
-        return green_percentage > 0.15
+            img = Image.open(BytesIO(image.getvalue()))
+        
+        # Convert to RGB if needed
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Simple check: look for greenish colors in the image
+        # Calculate average color values
+        stat = ImageStat.Stat(img)
+        r, g, b = stat.mean
+        
+        # If green channel is dominant and image isn't too dark/bright, likely a plant
+        # This is a simple heuristic - plants tend to have more green
+        is_greenish = g > r * 0.9 and g > b * 0.9
+        is_not_too_dark = (r + g + b) / 3 > 30
+        is_not_too_bright = (r + g + b) / 3 < 240
+        
+        return is_greenish and is_not_too_dark and is_not_too_bright
     except Exception as e:
         logger.warning(f"Plant verification failed: {str(e)}")
-        return False
+        return True  # Allow image through if verification fails
 
 class MockModel:
     """Fallback mock model for testing without actual model"""
