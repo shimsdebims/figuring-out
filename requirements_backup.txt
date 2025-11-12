@@ -1,26 +1,25 @@
-# streamlit==1.44.1
-# # tensorflow==2.15.0
-# pymongo==4.6.1
-# python-dotenv==1.0.1
-# Pillow==10.2.0
-# numpy>=1.23.0
-# pandas>=2.0.0
-# opencv-python-headless==4.8.0.76
-# h5py==3.10.0
-# tensorflow>=2.16.1
-
-
-
-
+# Core web framework
 streamlit==1.44.1
+
+# Deep Learning - TensorFlow (lighter than full TensorFlow)
 tensorflow>=2.16.1
+
+# Hugging Face for model downloading
+huggingface-hub>=0.20.0
+
+# Database
 pymongo==4.6.1
 python-dotenv==1.0.1
+
+# Image processing
 Pillow==10.2.0
+opencv-python-headless==4.8.0.76
+
+# Scientific computing
 numpy>=1.23.0
 pandas>=2.0.0
-opencv-python-headless==4.8.0.76
+
+# Additional utilities
 h5py==3.10.0
-gdown==4.7.1
 requests==2.31.0
 tqdm==4.66.1
