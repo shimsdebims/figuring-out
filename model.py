@@ -76,21 +76,22 @@ def load_model():
     try:
         st.write("🌱 Loading MobileNetV2 model from Hugging Face...")
         
-        from transformers import AutoImageProcessor, AutoModelForImageClassification
-        import torch
+        from transformers import AutoImageProcessor, TFAutoModelForImageClassification
         
-        # Load the model from Hugging Face
+        # Load the model from Hugging Face with TensorFlow
         model_name = "dima806/mobilenet_v2_1.0_224-plant-disease-identification"
         
         processor = AutoImageProcessor.from_pretrained(model_name)
-        model = AutoModelForImageClassification.from_pretrained(model_name)
-        model.eval()  # Set to evaluation mode
+        model = TFAutoModelForImageClassification.from_pretrained(
+            model_name,
+            from_pt=True  # Convert from PyTorch if needed
+        )
         
         st.success("✅ Model loaded successfully!")
         return {
             'model': model,
             'processor': processor,
-            'framework': 'transformers',
+            'framework': 'transformers_tf',
             'classes': None
         }
         
@@ -99,7 +100,7 @@ def load_model():
         st.error(f"Failed to load model: {str(e)}")
         
         # Fallback to mock model
-        st.warning("⚠️ Using demo mode - install dependencies or check model availability")
+        st.warning("⚠️ Using demo mode - model loading failed. Please contact support.")
         return {'model': MockModel(), 'framework': 'mock', 'classes': CLASS_NAMES}
 
 def preprocess_image(image_input):
@@ -139,9 +140,9 @@ def predict_disease(image_input):
         framework = model_info['framework']
         
         # Run inference based on framework
-        if framework == 'transformers':
-            import torch
-            from transformers import AutoImageProcessor
+        if framework == 'transformers_tf':
+            import tensorflow as tf
+            import numpy as np
             
             # Get processor and model
             processor = model_info['processor']
@@ -155,17 +156,16 @@ def predict_disease(image_input):
                 img = Image.open(BytesIO(image_input.getvalue()))
             
             # Preprocess with the model's processor
-            inputs = processor(images=img, return_tensors="pt")
+            inputs = processor(images=img, return_tensors="tf")
             
             # Make prediction
-            with torch.no_grad():
-                outputs = model(**inputs)
-                logits = outputs.logits
-                predictions = torch.nn.functional.softmax(logits, dim=-1)[0]
+            outputs = model(**inputs)
+            logits = outputs.logits
+            predictions = tf.nn.softmax(logits, axis=-1)[0]
             
             # Get top prediction
-            predicted_idx = torch.argmax(predictions).item()
-            confidence = float(predictions[predicted_idx])
+            predicted_idx = int(tf.argmax(predictions).numpy())
+            confidence = float(predictions[predicted_idx].numpy())
             
             # Get class name from model's config
             disease = model.config.id2label[predicted_idx]
