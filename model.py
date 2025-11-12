@@ -25,25 +25,7 @@ except Exception as e:
     logger.error(f"Error loading disease info: {str(e)}")
     CLASS_NAMES = ["Healthy"]
 
-# PlantVillage 38 classes to your 16 classes mapping
-PLANTVILLAGE_TO_CROPGUARD = {
-    # Tomato mappings
-    "Tomato___healthy": "Tomato - Healthy",
-    "Tomato___Leaf_Mold": "Tomato - Leaf Mold",
-    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": "Tomato - Yellow Leaf Curl Virus",
-    "Tomato___Septoria_leaf_spot": "Tomato - Septoria Leaf Spot",
-    
-    # Potato mappings
-    "Potato___healthy": "Potato - Healthy",
-    "Potato___Late_blight": "Potato - Late Blight",
-    "Potato___Early_blight": "Potato - Early Blight",
-    
-    # Corn mappings
-    "Corn_(maize)___healthy": "Corn - Healthy",
-    "Corn_(maize)___Northern_Leaf_Blight": "Corn - Northern Leaf Blight",
-    "Corn_(maize)___Common_rust_": "Corn - Common Rust",
-    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": "Corn - Gray Leaf Spot",
-}
+# No mapping needed - disease_info.json now uses PlantVillage class names directly
 
 def is_plant_image(image):
     """Verify image contains plant material using color analysis"""
@@ -172,23 +154,7 @@ def preprocess_image(image_input):
     
     return img_array
 
-def map_prediction(predicted_class, confidence):
-    """
-    Map PlantVillage class names to CropGuard class names
-    Returns: (cropguard_class, confidence) or (predicted_class, confidence) if no mapping
-    """
-    # Check if we have a direct mapping
-    if predicted_class in PLANTVILLAGE_TO_CROPGUARD:
-        return PLANTVILLAGE_TO_CROPGUARD[predicted_class], confidence
-    
-    # Check for fuzzy matching
-    for pv_class, cg_class in PLANTVILLAGE_TO_CROPGUARD.items():
-        if pv_class.lower().replace("_", " ") in predicted_class.lower():
-            return cg_class, confidence
-    
-    # No mapping found - return closest match or original
-    logger.warning(f"No mapping found for class: {predicted_class}")
-    return predicted_class, confidence * 0.5  # Reduce confidence for unmapped classes
+# No mapping function needed - disease names match PlantVillage format
 
 def predict_disease(image_input):
     """
@@ -215,16 +181,13 @@ def predict_disease(image_input):
             predicted_idx = np.argmax(predictions)
             confidence = float(predictions[predicted_idx])
             
-            # Get class name
+            # Get class name directly from PlantVillage classes
             plantvillage_classes = get_plantvillage_classes()
             
             if predicted_idx < len(plantvillage_classes):
-                predicted_class = plantvillage_classes[predicted_idx]
+                disease = plantvillage_classes[predicted_idx]
             else:
-                predicted_class = f"Class_{predicted_idx}"
-            
-            # Map to CropGuard classes
-            disease, confidence = map_prediction(predicted_class, confidence)
+                disease = f"Class_{predicted_idx}"
             
         elif framework == 'pytorch':
             import torch
@@ -241,10 +204,9 @@ def predict_disease(image_input):
             predicted_idx = torch.argmax(predictions).item()
             confidence = float(predictions[predicted_idx])
             
-            # Get class and map
+            # Get class name directly
             plantvillage_classes = get_plantvillage_classes()
-            predicted_class = plantvillage_classes[predicted_idx]
-            disease, confidence = map_prediction(predicted_class, confidence)
+            disease = plantvillage_classes[predicted_idx]
             
         elif framework == 'mock':
             # Mock model
