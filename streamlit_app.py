@@ -28,8 +28,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# Display a notice if the model isn't available
-if not os.path.exists("Model/mobilenet_v2_plantvillage.h5"):
+# Display model status
+if 'model' in st.session_state and st.session_state.model.get('framework') == 'mock':
+    st.error("⚠️ **DEMO MODE ACTIVE** - Real model failed to load. Predictions are random and inaccurate. Please contact support.")
+elif not os.path.exists("Model/mobilenet_v2_plantvillage.h5"):
     st.info("🌱 Model will be downloaded on first use (may take 1-2 minutes)")
 
 # Load CSS
